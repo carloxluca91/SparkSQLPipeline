@@ -6,4 +6,5 @@ case class ReadStep(override val name: String,
                     override val description: String,
                     override val stepType: String,
                     override val dataframeId: String)
+                    //srcOptions: SrcOptions)
   extends AbstractStep(name, description, stepType, dataframeId)

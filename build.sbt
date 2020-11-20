@@ -1,6 +1,7 @@
 val argonautVersion = "6.2.2"
-val scalaTestVersion = "3.2.0"
 val sparkVersion = "2.2.3"
+val scoptVersion = "3.5.0"
+val scalaTestVersion = "3.2.0"
 
 lazy val pipelineRunnerScala = (project in file("."))
   .settings(
@@ -20,7 +21,18 @@ lazy val pipelineRunnerScala = (project in file("."))
       "io.argonaut" %% "argonaut-scalaz" % argonautVersion,
       "io.argonaut" %% "argonaut-monocle" % argonautVersion,
       "io.argonaut" %% "argonaut-cats" % argonautVersion,
+      "org.apache.spark" %% "spark-core" % sparkVersion % "provided",
+      "org.apache.spark" %% "spark-sql" % sparkVersion % "provided",
+      "com.github.scopt" %% "scopt" % scoptVersion,
       "org.scalactic" %% "scalactic" % scalaTestVersion,
       "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
-    )
+    ),
+
+    assemblyJarName in assembly := s"${name.value}_${version.value}.jar",
+    assemblyMergeStrategy in assembly := {
+      case PathList("META-INF", _*) => MergeStrategy.discard
+      case x =>
+        val oldStrategy = (assemblyMergeStrategy in assembly).value
+        oldStrategy(x)
+    }
   )
