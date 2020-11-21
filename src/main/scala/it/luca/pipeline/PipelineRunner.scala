@@ -1,34 +1,128 @@
 package it.luca.pipeline
 
+import argonaut._, Argonaut._
+import it.luca.pipeline.data.LogRecord
 import it.luca.pipeline.utils.JobProperties
 import org.apache.log4j.Logger
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+
+import scala.io.{BufferedSource, Source}
 
 object PipelineRunner {
 
   private final val logger = Logger.getLogger(getClass)
 
-  private def getSparkSession: SparkSession = {
+  logger.info(s"Trying to initialize a ${classOf[SparkSession].getSimpleName}")
 
-    logger.info(s"Trying to initialize a ${classOf[SparkSession].getSimpleName}")
+  private final val sparkSession = SparkSession.builder
+    .enableHiveSupport
+    .config("hive.exec.dynamic.partition", "true")
+    .config("hive.exec.dynamic.partition.mode", "nonstrict")
+    .getOrCreate
 
-    val sparkSession = SparkSession.builder
-      .enableHiveSupport
-      .config("hive.exec.dynamic.partition", "true")
-      .config("hive.exec.dynamic.partition.mode", "nonstrict")
-      .getOrCreate
+  logger.info(s"Successfully initialized ${classOf[SparkSession].getSimpleName} " +
+    s"for application '${sparkSession.sparkContext.appName}', " +
+    s"applicationId = ${sparkSession.sparkContext.applicationId}, " +
+    s"UI url = ${sparkSession.sparkContext.uiWebUrl}")
 
-    logger.info(s"Successfully initialized ${classOf[SparkSession].getSimpleName} " +
-      s"for application '${sparkSession.sparkContext.appName}', " +
-      s"applicationId = ${sparkSession.sparkContext.applicationId}, " +
-      s"UI url = ${sparkSession.sparkContext.uiWebUrl}")
+  private final def getPipelineFilePathOpt(pipelineName: String, jobProperties: JobProperties): Option[String] = {
 
-    sparkSession
+    val hiveDefaultDbName = jobProperties.get("hive.database.default.name")
+    val existsDefaultHiveDb = sparkSession.catalog.databaseExists(hiveDefaultDbName.toLowerCase)
+    if (!existsDefaultHiveDb) {
+
+      // If Hive default Db does not exist, run INITIAL_LOAD pipeline
+      val hiveDbWarningMsg = s"Hive db '$hiveDefaultDbName' does not exist"
+      val warningMsg = if (pipelineName equalsIgnoreCase "INITIAL_LOAD") hiveDbWarningMsg
+      else s"$hiveDbWarningMsg. Thus, running 'INITIAL_LOAD' pipeline instead of '$pipelineName'"
+
+      logger.warn(warningMsg)
+      Some(jobProperties.get("initialLoad.file.path"))
+    } else {
+
+      // Otherwise, run provided pipeline (or at least try to ;)
+      val pipelineInfoTableName = jobProperties.get("hive.table.pipelineInfo.name")
+      val pipelineInfoTableNameFull = jobProperties.get("hive.table.pipelineInfo.fullName")
+      val existsPipelineInfoTable: Boolean = sparkSession.catalog.tableExists(pipelineInfoTableName, hiveDefaultDbName)
+      val isPipelineInfoTableNotEmpty: Boolean = existsPipelineInfoTable && sparkSession.table(pipelineInfoTableNameFull).count > 0
+      if (existsPipelineInfoTable & isPipelineInfoTableNotEmpty) {
+
+        // If everything seems to be ok with pipelineInfoTable, look up for provided pipeline name
+        logger.info(s"Table '$pipelineInfoTableNameFull' exists and it's not empty. " +
+          s"Thus, looking for information on pipeline '$pipelineName' within it")
+
+        val sqlQuery = s"SELECT file_name FROM $pipelineInfoTableNameFull WHERE trim(lower(pipeline_name)) = '${pipelineName.toLowerCase}'"
+        val pipelineInfoRows: Array[Row] = sparkSession.sql(sqlQuery).collect()
+
+        // If no information is found, sorry ;)
+        if (pipelineInfoRows.isEmpty) {
+          None
+        } else {
+
+          val pipelineJsonFilePath: String = pipelineInfoRows(0).getAs(0)
+          logger.info(s"Json file for pipeline '$pipelineName': '$pipelineJsonFilePath'")
+          Some(pipelineJsonFilePath)
+        }
+      } else {
+
+        // Otherwise, if something seems to be wrong with pipelineInfo, rerun INITIAL_LOAD
+        val pipelineInfoTableWarningMsg = if (existsPipelineInfoTable) s"Table '$pipelineInfoTableNameFull' is empty" else
+          s"Table '$pipelineInfoTableNameFull' does not exist"
+
+        val warningMsg = if (pipelineName equalsIgnoreCase "INITIAL_LOAD") pipelineInfoTableWarningMsg else
+          s"$pipelineInfoTableWarningMsg. Thus, running 'INITIAL_LOAD' pipeline instead of '$pipelineName'"
+        logger.warn(warningMsg)
+        Some(jobProperties.get("initialLoad.file.path"))
+      }
+    }
+  }
+
+  private def logToJDBC(logRecords: Seq[LogRecord], jobProperties: JobProperties): Unit = {
+
+    import sparkSession.implicits._
+
+    val logRecordDf: DataFrame = logRecords.toDF
+
+    logger.info(s"Successfully turned list of ${logRecords.size} object(s) " +
+      s"of type ${classOf[LogRecord].getSimpleName} " +
+      s"into a ${classOf[DataFrame].getSimpleName}")
+
+    // Extract relevant info for creating JDBC connection
+    val jdbcLoggingDatabase = jobProperties.get("jdbc.database.default.name")
+    val jdbcUrl = jobProperties.get("jdbc.default.url")
+    val jdbcDriver = jobProperties.get("jdbc.default.driver.className")
+    val jdbcUserName = jobProperties.get("jdbc.default.userName")
+    val jdbcPassWord = jobProperties.get("jdbc.default.passWord")
+    val jdbcUseSSL = jobProperties.get("jdbc.default.useSSL")
   }
 
   def run(pipelineName: String, propertiesFile: String): Unit = {
 
-    val sparkSession = getSparkSession
-    val jobProperties = JobProperties(propertiesFile)
+    val jobProperties: JobProperties = JobProperties(propertiesFile)
+    val pipelineFilePathOpt: Option[String] = getPipelineFilePathOpt(pipelineName, jobProperties)
+    pipelineFilePathOpt match {
+      case None => logger.warn(s"Unable to retrieve any record related to pipeline '$pipelineName'. Thus, nothing will be triggered")
+      case Some(path) =>
+
+        val bufferedSource: BufferedSource = Source.fromFile(path, "utf-8")
+        val pipelineJsonString = bufferedSource.getLines().mkString
+        bufferedSource.close()
+
+        val pipelineOpt: Option[Pipeline] = pipelineJsonString.decodeOption[Pipeline]
+        pipelineOpt match {
+          case None => logger.error(s"Unable to parse provided json file ($path) into a ${classOf[Pipeline].getSimpleName} object")
+          case Some(pipeline) =>
+
+            val pipelineExecutionOutcome: (Boolean, Seq[LogRecord]) = pipeline.run(sparkSession, jobProperties)
+            logToJDBC(pipelineExecutionOutcome._2, jobProperties)
+            if (pipelineExecutionOutcome._1) {
+
+              logger.info(s"Successfully executed whole pipeline '$pipelineName'")
+            } else {
+
+              logger.warn(s"Unable to fully execute pipeline '$pipelineName'")
+            }
+        }
+    }
   }
 }
