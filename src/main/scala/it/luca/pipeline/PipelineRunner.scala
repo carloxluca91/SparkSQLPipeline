@@ -1,10 +1,11 @@
 package it.luca.pipeline
 
 import argonaut._, Argonaut._
+import it.carloni.luca.JDBCUtils
 import it.luca.pipeline.data.LogRecord
-import it.luca.pipeline.utils.JobProperties
+import it.luca.pipeline.utils.{JobProperties, Utils}
 import org.apache.log4j.Logger
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
 
 import scala.io.{BufferedSource, Source}
 
@@ -94,35 +95,62 @@ object PipelineRunner {
     val jdbcUserName = jobProperties.get("jdbc.default.userName")
     val jdbcPassWord = jobProperties.get("jdbc.default.passWord")
     val jdbcUseSSL = jobProperties.get("jdbc.default.useSSL")
+
+    // Create database hosting logTable if necessary
+    val connection: java.sql.Connection = JDBCUtils.getConnection(jdbcUrl, jdbcDriver, jdbcUserName, jdbcPassWord, jdbcUseSSL)
+    JDBCUtils.createDbIfNotExists(jdbcLoggingDatabase, connection)
+
+    // Setup DataFrameWriter JDBC options
+    val logTableFullName = jobProperties.get("jdbc.table.logging.table.fullName")
+    val jdbcOptions: Map[String, String] = Map(
+
+      "url" ->jdbcUrl,
+      "driver" -> jdbcDriver,
+      "user" -> jdbcUserName,
+      "password" -> jdbcPassWord,
+      "useSSL" -> jdbcUseSSL
+    )
+
+    logger.info(s"Logging dataframe schema: ${Utils.datasetSchema(logRecordDf)}")
+    logRecordDf.coalesce(1)
+      .write
+      .format("jdbc")
+      .options(jdbcOptions)
+      .option("dbTable", logTableFullName)
+      .mode(SaveMode.Append)
+      .save
+
+    logger.info(s"Successfully inserted ${logRecords.size} logging record(s) within table '$logTableFullName'")
   }
 
   def run(pipelineName: String, propertiesFile: String): Unit = {
 
     val jobProperties: JobProperties = JobProperties(propertiesFile)
     val pipelineFilePathOpt: Option[String] = getPipelineFilePathOpt(pipelineName, jobProperties)
-    pipelineFilePathOpt match {
-      case None => logger.warn(s"Unable to retrieve any record related to pipeline '$pipelineName'. Thus, nothing will be triggered")
-      case Some(path) =>
+    if (pipelineFilePathOpt.nonEmpty) {
 
-        val bufferedSource: BufferedSource = Source.fromFile(path, "utf-8")
-        val pipelineJsonString = bufferedSource.getLines().mkString
-        bufferedSource.close()
+      val path: String = pipelineFilePathOpt.get
+      val bufferedSource: BufferedSource = Source.fromFile(path, "utf-8")
+      val pipelineJsonString = bufferedSource.getLines().mkString
+      bufferedSource.close()
 
-        val pipelineOpt: Option[Pipeline] = pipelineJsonString.decodeOption[Pipeline]
-        pipelineOpt match {
-          case None => logger.error(s"Unable to parse provided json file ($path) into a ${classOf[Pipeline].getSimpleName} object")
-          case Some(pipeline) =>
+      // Try to parse provided json file as a Pipeline
+      pipelineJsonString.decodeOption[Pipeline] match {
+        case None => logger.error(s"Unable to parse provided json file ($path) into a ${classOf[Pipeline].getSimpleName} object")
+        case Some(pipeline) =>
 
-            val pipelineExecutionOutcome: (Boolean, Seq[LogRecord]) = pipeline.run(sparkSession, jobProperties)
-            logToJDBC(pipelineExecutionOutcome._2, jobProperties)
-            if (pipelineExecutionOutcome._1) {
+          // Run pipeline and inspect the outcome
+          val (pipelineFullyExecuted, logRecords) : (Boolean, Seq[LogRecord]) = pipeline.run(sparkSession, jobProperties)
+          logToJDBC(logRecords, jobProperties)
+          if (pipelineFullyExecuted) {
+            logger.info(s"Successfully executed whole pipeline '$pipelineName'")
 
-              logger.info(s"Successfully executed whole pipeline '$pipelineName'")
-            } else {
-
-              logger.warn(s"Unable to fully execute pipeline '$pipelineName'")
-            }
-        }
+          } else {
+            logger.warn(s"Unable to fully execute pipeline '$pipelineName'")
+          }
+      }
+    } else {
+      logger.warn(s"Unable to retrieve any record related to pipeline '$pipelineName'. Thus, nothing will be triggered")
     }
   }
 }

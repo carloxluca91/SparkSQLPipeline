@@ -10,6 +10,7 @@ object JsonField extends Enumeration {
   val Name: Val = Val("name")
   val DataframeId: Val = Val("dataframeId")
   val Description: Val = Val("description")
+  val PipelineSteps: Val = Val("pipelineSteps")
   val SourceType: Val = Val("sourceType")
   val SrcOptions: Val = Val("srcOptions")
   val StepType: Val = Val("stepType")

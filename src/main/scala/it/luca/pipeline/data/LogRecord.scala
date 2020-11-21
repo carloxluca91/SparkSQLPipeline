@@ -28,7 +28,7 @@ object LogRecord {
             pipelineDescription: String,
             abstractStep: AbstractStep,
             sparkContext: SparkContext,
-            exceptionOpt: Option[Exception]): LogRecord = {
+            exceptionOpt: Option[Throwable]): LogRecord = {
 
     val applicationId: String = sparkContext.applicationId
     val applicationName: String = sparkContext.appName

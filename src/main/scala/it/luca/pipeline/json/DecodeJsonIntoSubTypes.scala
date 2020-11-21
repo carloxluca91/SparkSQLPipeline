@@ -2,7 +2,7 @@ package it.luca.pipeline.json
 
 import argonaut.{ACursor, CursorHistory, DecodeJson, DecodeResult, HCursor}
 
-trait JsonDecodeSubTypes[T] {
+trait DecodeJsonIntoSubTypes[T] {
 
   protected def decodeSubTypes(discriminatingFieldLabel: String, encoders: (String, DecodeJson[_ <: T]) *): DecodeJson[T] = {
 

@@ -2,6 +2,7 @@ package it.luca.pipeline
 
 import argonaut.Argonaut._
 import it.luca.pipeline.json.JsonField
+import it.luca.pipeline.step.common.AbstractStep
 import it.luca.pipeline.step.read.ReadStep
 
 class PipelineSpec extends UnitSpec {
@@ -9,7 +10,8 @@ class PipelineSpec extends UnitSpec {
   private final val name = "pipelineName"
   private final val description = "pipelineDescription"
 
-  s"A ${Pipeline.getClass.getSimpleName.replace("$", "")} object" should "be correctly parsed" in {
+  s"A ${Pipeline.getClass.getSimpleName.replace("$", "")} object" should
+    s"correctly parse both '${JsonField.Name.label}' and '${JsonField.Description.label}' field(s)" in {
 
     val pipelineString =
       s"""
@@ -27,18 +29,19 @@ class PipelineSpec extends UnitSpec {
 
         assert(x.name equalsIgnoreCase name)
         assert(x.description equalsIgnoreCase description)
-        assert(x.steps.isEmpty)
+        assert(x.pipelineStepsOpt.isEmpty)
     }
   }
 
-  it should "correctly parse abstract steps" in {
+  it should s"correctly parse '${JsonField.PipelineSteps.label}' field into a " +
+    s"${classOf[List[AbstractStep]].getSimpleName} of ${classOf[AbstractStep].getSimpleName} object(s)" in {
 
     val pipelineString =
       s"""
          |{
          |  "${JsonField.Name.label}": "$name",
          |  "${JsonField.Description.label}": "$description",
-         |  "steps": [
+         |  "${JsonField.PipelineSteps.label}": [
          |    {
          |      "${JsonField.Name.label}": "$name",
          |      "${JsonField.Description.label}": "$description",
@@ -57,8 +60,8 @@ class PipelineSpec extends UnitSpec {
 
         assert(x.name equalsIgnoreCase name)
         assert(x.description equalsIgnoreCase description)
-        assert(x.steps.nonEmpty)
-        x.steps match {
+        assert(x.pipelineStepsOpt.nonEmpty)
+        x.pipelineStepsOpt match {
           case None =>
           case Some(y) =>
 
