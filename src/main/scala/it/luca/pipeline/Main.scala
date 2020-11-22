@@ -16,7 +16,11 @@ object Main extends App {
     case Some(config) =>
 
       logger.info(s"Successfully parsed main arguments. ${config.toString}")
-      Try {PipelineRunner.run(config.pipelineName, config.jobPropertiesFile)} match {
+      Try {
+
+        PipelineRunner.run(config.pipelineName, config.jobPropertiesFile)
+
+      } match {
         case Failure(exception) =>
           logger.error(s"Caught error while trying to run pipeline ${config.pipelineName}. " +
           s"Stack trace: ", exception)

@@ -1,6 +1,6 @@
 package it.luca.pipeline.step.transform
 
-import argonaut.DecodeJson
+import it.luca.pipeline.json.DecodeJsonDerive
 import it.luca.pipeline.step.common.AbstractStep
 import org.apache.spark.sql.DataFrame
 
@@ -18,7 +18,4 @@ case class TransformStep(override val name: String,
   }
 }
 
-object TransformStep {
-
-  implicit def TransformStepDecodeJson: DecodeJson[TransformStep] = DecodeJson.derive[TransformStep]
-}
+object TransformStep extends DecodeJsonDerive[TransformStep]

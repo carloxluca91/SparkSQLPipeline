@@ -1,13 +1,10 @@
 package it.luca.pipeline
 
-import argonaut._, Argonaut._
 import it.carloni.luca.JDBCUtils
 import it.luca.pipeline.data.LogRecord
 import it.luca.pipeline.utils.{JobProperties, Utils}
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
-
-import scala.io.{BufferedSource, Source}
 
 object PipelineRunner {
 
@@ -129,25 +126,15 @@ object PipelineRunner {
     val pipelineFilePathOpt: Option[String] = getPipelineFilePathOpt(pipelineName, jobProperties)
     if (pipelineFilePathOpt.nonEmpty) {
 
-      val path: String = pipelineFilePathOpt.get
-      val bufferedSource: BufferedSource = Source.fromFile(path, "utf-8")
-      val pipelineJsonString = bufferedSource.getLines().mkString
-      bufferedSource.close()
+      // Try to parse provided json file as a Pipeline and run it
+      val pipeline: Pipeline = Utils.decodeJsonFile[Pipeline](pipelineFilePathOpt.get)
+      val (pipelineFullyExecuted, logRecords) : (Boolean, Seq[LogRecord]) = pipeline.run(sparkSession, jobProperties)
+      logToJDBC(logRecords, jobProperties)
+      if (pipelineFullyExecuted) {
+        logger.info(s"Successfully executed whole pipeline '$pipelineName'")
 
-      // Try to parse provided json file as a Pipeline
-      pipelineJsonString.decodeOption[Pipeline] match {
-        case None => logger.error(s"Unable to parse provided json file ($path) into a ${classOf[Pipeline].getSimpleName} object")
-        case Some(pipeline) =>
-
-          // Run pipeline and inspect the outcome
-          val (pipelineFullyExecuted, logRecords) : (Boolean, Seq[LogRecord]) = pipeline.run(sparkSession, jobProperties)
-          logToJDBC(logRecords, jobProperties)
-          if (pipelineFullyExecuted) {
-            logger.info(s"Successfully executed whole pipeline '$pipelineName'")
-
-          } else {
-            logger.warn(s"Unable to fully execute pipeline '$pipelineName'")
-          }
+      } else {
+        logger.warn(s"Unable to fully execute pipeline '$pipelineName'")
       }
     } else {
       logger.warn(s"Unable to retrieve any record related to pipeline '$pipelineName'. Thus, nothing will be triggered")
