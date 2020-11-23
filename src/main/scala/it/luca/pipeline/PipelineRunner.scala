@@ -1,8 +1,7 @@
 package it.luca.pipeline
 
-import it.carloni.luca.JDBCUtils
 import it.luca.pipeline.data.LogRecord
-import it.luca.pipeline.utils.{JobProperties, Utils}
+import it.luca.pipeline.utils.{JDBCUtils, JobProperties, Json, Spark}
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
 
@@ -108,7 +107,7 @@ object PipelineRunner {
       "useSSL" -> jdbcUseSSL
     )
 
-    logger.info(s"Logging dataframe schema: ${Utils.datasetSchema(logRecordDf)}")
+    logger.info(s"Logging dataframe schema: ${Spark.dataframeSchema(logRecordDf)}")
     logRecordDf.coalesce(1)
       .write
       .format("jdbc")
@@ -127,7 +126,7 @@ object PipelineRunner {
     if (pipelineFilePathOpt.nonEmpty) {
 
       // Try to parse provided json file as a Pipeline and run it
-      val pipeline: Pipeline = Utils.decodeJsonFile[Pipeline](pipelineFilePathOpt.get)
+      val pipeline: Pipeline = Json.decodeJsonFile[Pipeline](pipelineFilePathOpt.get)
       val (pipelineFullyExecuted, logRecords) : (Boolean, Seq[LogRecord]) = pipeline.run(sparkSession, jobProperties)
       logToJDBC(logRecords, jobProperties)
       if (pipelineFullyExecuted) {
@@ -137,7 +136,7 @@ object PipelineRunner {
         logger.warn(s"Unable to fully execute pipeline '$pipelineName'")
       }
     } else {
-      logger.warn(s"Unable to retrieve any record related to pipeline '$pipelineName'. Thus, nothing will be triggered")
+      logger.warn(s"Unable to retrieve any record(s) related to pipeline '$pipelineName'. Thus, nothing will be triggered")
     }
   }
 }

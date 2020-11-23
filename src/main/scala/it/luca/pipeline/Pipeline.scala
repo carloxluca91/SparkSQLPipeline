@@ -1,36 +1,35 @@
 package it.luca.pipeline
 
-import argonaut.Argonaut.jdecode3L
-import argonaut._
+import argonaut.DecodeJson
 import it.luca.pipeline.data.LogRecord
 import it.luca.pipeline.exception.EmptyPipelineException
-import it.luca.pipeline.json.JsonField
 import it.luca.pipeline.step.common.AbstractStep
-import it.luca.pipeline.step.read.ReadStep
-import it.luca.pipeline.step.transform.TransformStep
+import it.luca.pipeline.step.read.reader.ReadStep
+import it.luca.pipeline.step.transform.transformation.TransformStep
 import it.luca.pipeline.step.write.WriteStep
-import it.luca.pipeline.utils.{JobProperties, Utils}
+import it.luca.pipeline.utils.{JobProperties, Spark}
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
 
-case class Pipeline(name: String, description: String, pipelineStepsOpt: Option[List[AbstractStep]]) {
+case class Pipeline(name: String, description: String, pipelineSteps: Option[List[AbstractStep]]) {
 
-  private final val logger = Logger.getLogger(classOf[LogRecord])
+  private final val logger = Logger.getLogger(classOf[Pipeline])
   private final val dataframeMap: mutable.Map[String, DataFrame] = mutable.Map.empty[String, DataFrame]
 
   private def updateDataframeMap(dataframeId: String, dataFrame: DataFrame): Unit = {
 
-    val dataFrameSchema: String = Utils.datasetSchema(dataFrame)
+    val inputDfSchema: String = Spark.dataframeSchema(dataFrame)
     if (dataframeMap contains dataframeId) {
 
-      logger.warn(s"Dataframe id '$dataframeId' is already defined. Schema: ${Utils.datasetSchema(dataframeMap(dataframeId))}")
-      logger.warn(s"It will be overwritten by a Dataframe having schema $dataFrameSchema")
+      val oldDfSchema: String = Spark.dataframeSchema(dataframeMap(dataframeId))
+      logger.warn(s"Dataframe id '$dataframeId' is already defined. Schema: $oldDfSchema")
+      logger.warn(s"It will be overwritten by a Dataframe having schema $inputDfSchema")
     } else {
 
-      logger.info(s"Defining new entry '$dataframeId' having schema $dataFrameSchema")
+      logger.info(s"Defining new entry '$dataframeId' having schema $inputDfSchema")
     }
 
     dataframeMap(dataframeId) = dataFrame
@@ -38,11 +37,11 @@ case class Pipeline(name: String, description: String, pipelineStepsOpt: Option[
 
   def run(sparkSession: SparkSession, jobProperties: JobProperties): (Boolean, Seq[LogRecord]) = {
 
-    if (pipelineStepsOpt.nonEmpty) {
+    if (pipelineSteps.nonEmpty) {
 
       // If some steps are defined
       val logRecords: mutable.ListBuffer[LogRecord] = mutable.ListBuffer.empty[LogRecord]
-      for (abstractStep: AbstractStep <- pipelineStepsOpt.get) {
+      for (abstractStep: AbstractStep <- pipelineSteps.get) {
 
         // Try to execute them one by one according to matched pattern
         val (stepName, stepType): (String, String) = (abstractStep.name, abstractStep.stepType)
@@ -60,8 +59,6 @@ case class Pipeline(name: String, description: String, pipelineStepsOpt: Option[
             case writeStep: WriteStep =>
               val dataframeToWrite: DataFrame = dataframeMap(writeStep.dataframeId)
               writeStep.write(dataframeToWrite, sparkSession)
-
-            case _ =>
           }
         }
 
@@ -90,6 +87,5 @@ case class Pipeline(name: String, description: String, pipelineStepsOpt: Option[
 
 object Pipeline {
 
-  implicit def PipelineDecodeJson: DecodeJson[Pipeline] =
-    jdecode3L(Pipeline.apply)(JsonField.Name.label, JsonField.Description.label, JsonField.PipelineSteps.label)
+  implicit def decodeJson: DecodeJson[Pipeline] = DecodeJson.derive[Pipeline]
 }

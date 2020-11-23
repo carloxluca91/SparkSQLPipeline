@@ -1,6 +1,6 @@
 package it.luca.pipeline.step.write
 
-import it.luca.pipeline.json.DecodeJsonDerive
+import argonaut.DecodeJson
 import it.luca.pipeline.step.common.AbstractStep
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -14,4 +14,7 @@ case class WriteStep(override val name: String,
   }
 }
 
-object WriteStep extends DecodeJsonDerive[WriteStep]
+object WriteStep {
+
+  implicit def decodeJson: DecodeJson[WriteStep] = DecodeJson.derive[WriteStep]
+}

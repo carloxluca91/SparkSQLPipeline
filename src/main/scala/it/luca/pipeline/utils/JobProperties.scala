@@ -30,7 +30,7 @@ case class JobProperties(propertiesFile: String) {
       case Some(x) => x.asInstanceOf[T]
     }
 
-    logger.info(s"Value of property $key = $returnValue")
+    logger.info(s"Value of property $key is $returnValue")
     returnValue
   }
 
@@ -38,20 +38,16 @@ case class JobProperties(propertiesFile: String) {
 
     keyOpt match {
       case None =>
-
         logger.warn(s"Input key is null. Thus, returning the default value ($defaultValue)")
         defaultValue
 
       case Some(key) =>
-
         if (jobProperties.containsKey(key)) {
-
           val returnValue: T = jobProperties.getString(key).asInstanceOf[T]
           logger.info(s"Value of property $key is $returnValue")
           returnValue
 
         } else {
-
           logger.warn(s"Key '$key' is not present within .properties file. Thus, returning the default value ($defaultValue)")
           defaultValue
         }
