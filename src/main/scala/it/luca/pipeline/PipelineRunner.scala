@@ -9,20 +9,7 @@ object PipelineRunner {
 
   private final val logger = Logger.getLogger(getClass)
 
-  logger.info(s"Trying to initialize a ${classOf[SparkSession].getSimpleName}")
-
-  private final val sparkSession = SparkSession.builder
-    .enableHiveSupport
-    .config("hive.exec.dynamic.partition", "true")
-    .config("hive.exec.dynamic.partition.mode", "nonstrict")
-    .getOrCreate
-
-  logger.info(s"Successfully initialized ${classOf[SparkSession].getSimpleName} " +
-    s"for application '${sparkSession.sparkContext.appName}', " +
-    s"applicationId = ${sparkSession.sparkContext.applicationId}, " +
-    s"UI url = ${sparkSession.sparkContext.uiWebUrl}")
-
-  private final def getPipelineFilePathOpt(pipelineName: String, jobProperties: JobProperties): Option[String] = {
+  private final def getPipelineFilePathOpt(pipelineName: String, sparkSession: SparkSession, jobProperties: JobProperties): Option[String] = {
 
     val hiveDefaultDbName = jobProperties.get("hive.database.default.name")
     val existsDefaultHiveDb = sparkSession.catalog.databaseExists(hiveDefaultDbName.toLowerCase)
@@ -74,7 +61,7 @@ object PipelineRunner {
     }
   }
 
-  private def logToJDBC(logRecords: Seq[LogRecord], jobProperties: JobProperties): Unit = {
+  private def logToJDBC(logRecords: Seq[LogRecord], sparkSession: SparkSession, jobProperties: JobProperties): Unit = {
 
     import sparkSession.implicits._
 
@@ -121,14 +108,15 @@ object PipelineRunner {
 
   def run(pipelineName: String, propertiesFile: String): Unit = {
 
+    lazy val sparkSession: SparkSession = Spark.getOrCreateSparkSession
     val jobProperties: JobProperties = JobProperties(propertiesFile)
-    val pipelineFilePathOpt: Option[String] = getPipelineFilePathOpt(pipelineName, jobProperties)
+    val pipelineFilePathOpt: Option[String] = getPipelineFilePathOpt(pipelineName, sparkSession, jobProperties)
     if (pipelineFilePathOpt.nonEmpty) {
 
       // Try to parse provided json file as a Pipeline and run it
       val pipeline: Pipeline = Json.decodeJsonFile[Pipeline](pipelineFilePathOpt.get)
       val (pipelineFullyExecuted, logRecords) : (Boolean, Seq[LogRecord]) = pipeline.run(sparkSession, jobProperties)
-      logToJDBC(logRecords, jobProperties)
+      logToJDBC(logRecords, sparkSession, jobProperties)
       if (pipelineFullyExecuted) {
         logger.info(s"Successfully executed whole pipeline '$pipelineName'")
 

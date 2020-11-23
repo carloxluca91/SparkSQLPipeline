@@ -29,7 +29,7 @@ object CsvReader extends AbstractReader[CsvSrcOptions] {
     val csvPath: String = jobProperties.get(srcOptions.path)
     val csvSchemaFilePath: String = jobProperties.get(srcOptions.schemaFile)
     val separator: String = jobProperties.getOrElse(srcOptions.separator, ",")
-    val header: Boolean = jobProperties.getOrElseAs[Boolean](srcOptions.header, false)
+    val header: Boolean = jobProperties.getOrElseAs(srcOptions.header, false)
 
     logger.info(s"Provided csv details:\n\n" +
       s"  path = $csvPath,\n" +

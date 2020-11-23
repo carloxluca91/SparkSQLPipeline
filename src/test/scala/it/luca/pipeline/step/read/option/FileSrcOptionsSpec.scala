@@ -1,21 +1,22 @@
 package it.luca.pipeline.step.read.option
 
 import argonaut.EncodeJson
-import it.luca.pipeline.JsonUnitTest
 import it.luca.pipeline.json.{JsonField, JsonValue}
+import it.luca.pipeline.test.JsonUnitTest
 import it.luca.pipeline.utils.Json
 
 class FileSrcOptionsSpec extends JsonUnitTest {
 
   private final val csvSource = JsonValue.CsvSource.value
+  private final val csvSrcOptionsApply: (Option[String], Option[String]) => CsvSrcOptions
+  = CsvSrcOptions(JsonValue.CsvSource.value, "path", "schema", _: Option[String], _: Option[String])
 
   s"A ${className[SrcOptions]} object" should
     s"be parsed as ${className[CsvSrcOptions]} " +
       s"when ${JsonField.SourceType.label} = '$csvSource'" in {
 
     implicit val encodeJson: EncodeJson[CsvSrcOptions] = EncodeJson.derive[CsvSrcOptions]
-    val inputString: String = toJsonString[CsvSrcOptions](
-      CsvSrcOptions(csvSource, "path", "schemaFile", Some(","), Some("header")))
+    val inputString: String = toJsonString[CsvSrcOptions](csvSrcOptionsApply(Some(","), Some("header")))
 
     val srcOptions = Json.decodeJsonString[CsvSrcOptions](inputString)
     assert(srcOptions.isInstanceOf[CsvSrcOptions])
@@ -31,8 +32,7 @@ class FileSrcOptionsSpec extends JsonUnitTest {
     implicit val encodeJson: EncodeJson[CsvSrcOptions] = EncodeJson.jencode3L((c: CsvSrcOptions) =>
       (c.sourceType, c.path, c.schemaFile))(
       JsonField.SourceType.label, JsonField.Path.label, JsonField.SchemaFile.label)
-    val inputString: String = toJsonString[CsvSrcOptions](
-      CsvSrcOptions(csvSource, "path", "schemaFile", None, None))
+    val inputString: String = toJsonString[CsvSrcOptions](csvSrcOptionsApply(None, None))
 
     val srcOptions = Json.decodeJsonString[CsvSrcOptions](inputString)
     assert(srcOptions.isInstanceOf[CsvSrcOptions])

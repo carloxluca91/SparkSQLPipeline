@@ -1,16 +1,14 @@
-package it.luca.pipeline
+package it.luca.pipeline.test
 
-import argonaut._, Argonaut._
+import argonaut.Argonaut._
+import argonaut._
 import org.apache.log4j.Logger
-import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatest.matchers.should
+
 import scala.reflect.runtime.universe._
 
-abstract class JsonUnitTest extends AnyFlatSpec with should.Matchers {
+abstract class JsonUnitTest extends AbstractSpec {
 
   private final val logger = Logger.getLogger(getClass)
-
-  def className[T](implicit typeTag: TypeTag[T]): String = typeOf[T].typeSymbol.name.toString
 
   def toJsonString[T](tObject: T)(implicit encodeJson: EncodeJson[T], typeTag: TypeTag[T]): String = {
 
