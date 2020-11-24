@@ -8,7 +8,7 @@ import org.apache.log4j.Logger
 import scala.io.{BufferedSource, Source}
 import scala.reflect.runtime.universe._
 
-object Json {
+object JsonUtils {
 
   private final val logger = Logger.getLogger(getClass)
 

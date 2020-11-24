@@ -7,7 +7,7 @@ import it.luca.pipeline.step.common.AbstractStep
 import it.luca.pipeline.step.read.reader.ReadStep
 import it.luca.pipeline.step.transform.transformation.TransformStep
 import it.luca.pipeline.step.write.WriteStep
-import it.luca.pipeline.utils.{JobProperties, Spark}
+import it.luca.pipeline.utils.{JobProperties, SparkUtils}
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -21,10 +21,10 @@ case class Pipeline(name: String, description: String, pipelineSteps: Option[Lis
 
   private def updateDataframeMap(dataframeId: String, dataFrame: DataFrame): Unit = {
 
-    val inputDfSchema: String = Spark.dataframeSchema(dataFrame)
+    val inputDfSchema: String = SparkUtils.dataframeSchema(dataFrame)
     if (dataframeMap contains dataframeId) {
 
-      val oldDfSchema: String = Spark.dataframeSchema(dataframeMap(dataframeId))
+      val oldDfSchema: String = SparkUtils.dataframeSchema(dataframeMap(dataframeId))
       logger.warn(s"Dataframe id '$dataframeId' is already defined. Schema: $oldDfSchema")
       logger.warn(s"It will be overwritten by a Dataframe having schema $inputDfSchema")
     } else {
@@ -47,7 +47,6 @@ case class Pipeline(name: String, description: String, pipelineSteps: Option[Lis
         val (stepName, stepType): (String, String) = (abstractStep.name, abstractStep.stepType)
         val tryToExecuteStep: Try[Unit] = Try {
           abstractStep match {
-
             case readStep: ReadStep =>
               val readDataframe: DataFrame = readStep.read(sparkSession, jobProperties)
               updateDataframeMap(readStep.dataframeId, readDataframe)

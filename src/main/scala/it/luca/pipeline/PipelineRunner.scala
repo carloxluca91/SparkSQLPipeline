@@ -1,7 +1,7 @@
 package it.luca.pipeline
 
 import it.luca.pipeline.data.LogRecord
-import it.luca.pipeline.utils.{JDBCUtils, JobProperties, Json, Spark}
+import it.luca.pipeline.utils.{JDBCUtils, JobProperties, JsonUtils, SparkUtils}
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
 
@@ -94,7 +94,7 @@ object PipelineRunner {
       "useSSL" -> jdbcUseSSL
     )
 
-    logger.info(s"Logging dataframe schema: ${Spark.dataframeSchema(logRecordDf)}")
+    logger.info(s"Logging dataframe schema: ${SparkUtils.dataframeSchema(logRecordDf)}")
     logRecordDf.coalesce(1)
       .write
       .format("jdbc")
@@ -108,13 +108,13 @@ object PipelineRunner {
 
   def run(pipelineName: String, propertiesFile: String): Unit = {
 
-    lazy val sparkSession: SparkSession = Spark.getOrCreateSparkSession
+    lazy val sparkSession: SparkSession = SparkUtils.getOrCreateSparkSession
     val jobProperties: JobProperties = JobProperties(propertiesFile)
     val pipelineFilePathOpt: Option[String] = getPipelineFilePathOpt(pipelineName, sparkSession, jobProperties)
     if (pipelineFilePathOpt.nonEmpty) {
 
       // Try to parse provided json file as a Pipeline and run it
-      val pipeline: Pipeline = Json.decodeJsonFile[Pipeline](pipelineFilePathOpt.get)
+      val pipeline: Pipeline = JsonUtils.decodeJsonFile[Pipeline](pipelineFilePathOpt.get)
       val (pipelineFullyExecuted, logRecords) : (Boolean, Seq[LogRecord]) = pipeline.run(sparkSession, jobProperties)
       logToJDBC(logRecords, sparkSession, jobProperties)
       if (pipelineFullyExecuted) {

@@ -2,10 +2,10 @@ package it.luca.pipeline.step.read.option
 
 import argonaut._
 import it.luca.pipeline.json.{JsonField, JsonValue}
-import it.luca.pipeline.test.JsonUnitTest
-import it.luca.pipeline.utils.Json
+import it.luca.pipeline.test.JsonSpec
+import it.luca.pipeline.utils.JsonUtils
 
-class TableSrcOptionsSpec extends JsonUnitTest {
+class TableSrcOptionsSpec extends JsonSpec {
 
   private final val hiveSource = JsonValue.HiveSource.value
   private final val jdbcSource = JsonValue.JDBCSource.value
@@ -19,7 +19,7 @@ class TableSrcOptionsSpec extends JsonUnitTest {
     implicit val encodeJson: EncodeJson[HiveTableSrcOptions] = EncodeJson.derive[HiveTableSrcOptions]
     val inputString: String = toJsonString(HiveTableSrcOptions(hiveSource, "db", "table"))
 
-    val srcOptions = Json.decodeJsonString[SrcOptions](inputString)
+    val srcOptions = JsonUtils.decodeJsonString[SrcOptions](inputString)
     assert(srcOptions.isInstanceOf[HiveTableSrcOptions])
     val hiveTableSrcOptions = srcOptions.asInstanceOf[HiveTableSrcOptions]
     assert(hiveTableSrcOptions.dbName == "db")
@@ -32,7 +32,7 @@ class TableSrcOptionsSpec extends JsonUnitTest {
     implicit val encodeJson: EncodeJson[JDBCTableSrcOptions] = EncodeJson.derive[JDBCTableSrcOptions]
     val inputString: String = toJsonString(jdbcTableSrcOptionsApply(Some("ssl")))
 
-    val srcOptions = Json.decodeJsonString[SrcOptions](inputString)
+    val srcOptions = JsonUtils.decodeJsonString[SrcOptions](inputString)
     assert(srcOptions.isInstanceOf[JDBCTableSrcOptions])
     val jdbcTableSrcOptions = srcOptions.asInstanceOf[JDBCTableSrcOptions]
     assert(jdbcTableSrcOptions.jdbcUseSSL.nonEmpty)
@@ -53,7 +53,7 @@ class TableSrcOptionsSpec extends JsonUnitTest {
       JsonField.JDBCPassword.label)
 
     val inputString = toJsonString(jdbcTableSrcOptionsApply(None))
-    val srcOptions = Json.decodeJsonString[SrcOptions](inputString)
+    val srcOptions = JsonUtils.decodeJsonString[SrcOptions](inputString)
     assert(srcOptions.isInstanceOf[JDBCTableSrcOptions])
     val jdbcTableSrcOptions = srcOptions.asInstanceOf[JDBCTableSrcOptions]
     assert(jdbcTableSrcOptions.jdbcUseSSL.isEmpty)

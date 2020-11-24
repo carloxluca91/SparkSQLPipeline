@@ -6,7 +6,7 @@ import org.apache.log4j.Logger
 
 import scala.reflect.runtime.universe._
 
-abstract class JsonUnitTest extends AbstractSpec {
+abstract class JsonSpec extends AbstractSpec {
 
   private final val logger = Logger.getLogger(getClass)
 
