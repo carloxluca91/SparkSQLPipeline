@@ -8,6 +8,8 @@ object EtlExpression extends Enumeration {
   implicit def valueToETLExpressionVal(x: Value): Val = x.asInstanceOf[Val]
 
   val Col: Val = Val("^(col)\\('(\\w+)'\\)$".r)
+  val CurrentDateOrTimestamp: Val = Val("^(current_date|current_timestamp)\\(\\)$".r)
   val Lit: Val = Val("^(lit)\\(('?.+'?)\\)$".r)
+  val ToDateOrTimestamp: Val = Val("^(to_date|to_timestamp)\\((\\w+\\(.*\\)), '(.+)'\\)$".r)
 
 }

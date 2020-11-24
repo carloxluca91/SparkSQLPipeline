@@ -12,6 +12,7 @@ case class LogRecord(applicationId: String,
                      applicationStartDate: Date,
                      pipelineName: String,
                      pipelineDescription: String,
+                     stepIndex: Int,
                      stepName: String,
                      stepType: String,
                      stepDescription: String,
@@ -26,6 +27,7 @@ object LogRecord {
 
   def apply(pipelineName: String,
             pipelineDescription: String,
+            stepIndex: Int,
             abstractStep: AbstractStep,
             sparkContext: SparkContext,
             exceptionOpt: Option[Throwable]): LogRecord = {
@@ -55,6 +57,7 @@ object LogRecord {
       applicationStartDate,
       pipelineName,
       pipelineDescription,
+      stepIndex,
       abstractStep.name,
       abstractStep.stepType,
       abstractStep.description,

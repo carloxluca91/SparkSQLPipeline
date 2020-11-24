@@ -1,7 +1,7 @@
 package it.luca.pipeline.etl.parsing
 
 import it.luca.pipeline.etl.common.{AbstractExpression, SingleColumnExpression, StaticColumnExpression}
-import it.luca.pipeline.etl.catalog.{ColExpression, LitExpression}
+import it.luca.pipeline.etl.catalog.{Col, CurrentDateOrTimestamp, Lit, ToDateOrTimestamp}
 import org.apache.log4j.Logger
 import org.apache.spark.sql.Column
 
@@ -18,8 +18,10 @@ object EtlExpressionParser {
 
       val matchingExpression: EtlExpression.Value = matchingEtlExpressions.head
       val abstractExpression: AbstractExpression = matchingExpression match {
-        case EtlExpression.Col => ColExpression(etlExpression)
-        case EtlExpression.Lit => LitExpression(etlExpression)
+        case EtlExpression.Col => Col(etlExpression)
+        case EtlExpression.CurrentDateOrTimestamp => CurrentDateOrTimestamp(etlExpression)
+        case EtlExpression.Lit => Lit(etlExpression)
+        case EtlExpression.ToDateOrTimestamp => ToDateOrTimestamp(etlExpression)
         case _ =>
           //TODO: custom exception
           throw new Exception

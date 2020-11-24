@@ -41,7 +41,7 @@ case class Pipeline(name: String, description: String, pipelineSteps: Option[Lis
 
       // If some steps are defined
       val logRecords: mutable.ListBuffer[LogRecord] = mutable.ListBuffer.empty[LogRecord]
-      for (abstractStep: AbstractStep <- pipelineSteps.get) {
+      for ((abstractStep, stepIndex) <- pipelineSteps.get.zipWithIndex) {
 
         // Try to execute them one by one according to matched pattern
         val (stepName, stepType): (String, String) = (abstractStep.name, abstractStep.stepType)
@@ -64,16 +64,16 @@ case class Pipeline(name: String, description: String, pipelineSteps: Option[Lis
         tryToExecuteStep match {
           case Failure(e) =>
 
-            // If the step triggered an exception, create a new LogRecord reporting what happened and return ones gathered so far
-            logger.error(s"Caught exception while trying to execute step '$stepName' (type '$stepType'). Stack trace: ", e)
-            logRecords.append(LogRecord(name, description, abstractStep, sparkSession.sparkContext, Some(e)))
+            // If the step triggered an exception, create a new LogRecord reporting what happened and return the ones gathered so far
+            logger.error(s"Caught exception while trying to execute step # $stepIndex ('$stepName', type '$stepType'). Stack trace: ", e)
+            logRecords.append(LogRecord(name, description, stepIndex, abstractStep, sparkSession.sparkContext, Some(e)))
             return (false, logRecords)
 
           case Success(_) =>
 
             // Otherwise, just add this one and continue looping
-            logger.info(s"Successfully executed step '$stepName' (type '$stepType')")
-            logRecords.append(LogRecord(name, description, abstractStep, sparkSession.sparkContext, None))
+            logger.info(s"Successfully executed step # $stepIndex ('$stepName', type '$stepType')")
+            logRecords.append(LogRecord(name, description, stepIndex, abstractStep, sparkSession.sparkContext, None))
         }
       }
 

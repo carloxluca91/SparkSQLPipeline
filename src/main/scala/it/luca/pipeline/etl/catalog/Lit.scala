@@ -7,7 +7,7 @@ import org.apache.spark.sql.functions.lit
 
 import scala.util.matching.Regex
 
-case class LitExpression(override val expression: String)
+case class Lit(override val expression: String)
   extends StaticColumnExpression(expression, EtlExpression.Lit) {
 
   final val litValue: String = group(2)
