@@ -4,7 +4,7 @@ import argonaut._
 import it.luca.pipeline.json.{DecodeJsonSubTypes, JsonField, JsonValue}
 import it.luca.pipeline.step.read.reader.ReadStep
 import it.luca.pipeline.step.transform.transformation.TransformStep
-import it.luca.pipeline.step.write.WriteStep
+import it.luca.pipeline.step.write.writer.WriteStep
 
 abstract class AbstractStep(val name: String, val description: String, val stepType: String, val dataframeId: String)
 

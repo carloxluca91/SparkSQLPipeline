@@ -7,9 +7,11 @@ object JsonField extends Enumeration {
   import scala.language.implicitConversions
   implicit def valueToJsonFieldVal(x: Value): Val = x.asInstanceOf[Val]
 
+  val DestinationType: Val = Val("destinationType")
   val DbName: Val = Val("dbName")
   val Header: Val = Val("header")
   val JDBCDriver: Val = Val("jdbcDriver")
+  val JDBCOptions: Val = Val("jdbcOptions")
   val JDBCPassword: Val = Val("jdbcPassword")
   val JDBCUrl: Val = Val("jdbcUrl")
   val JDBCUser: Val = Val("jdbcUser")

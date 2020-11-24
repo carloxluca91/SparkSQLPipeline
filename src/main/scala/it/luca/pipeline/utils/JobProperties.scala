@@ -1,6 +1,6 @@
 package it.luca.pipeline.utils
 
-import it.luca.pipeline.exception.UnExistingKeyException
+import it.luca.pipeline.exception.UnexistingKeyException
 import org.apache.commons.configuration.PropertiesConfiguration
 import org.apache.log4j.Logger
 
@@ -25,7 +25,7 @@ case class JobProperties(propertiesFile: String) {
       logger.info(s"Value of property $key is $keyValue")
       keyValue
     } else {
-      throw UnExistingKeyException(key)
+      throw UnexistingKeyException(key)
     }
   }
 

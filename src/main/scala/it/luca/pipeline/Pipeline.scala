@@ -6,7 +6,7 @@ import it.luca.pipeline.exception.EmptyPipelineException
 import it.luca.pipeline.step.common.AbstractStep
 import it.luca.pipeline.step.read.reader.ReadStep
 import it.luca.pipeline.step.transform.transformation.TransformStep
-import it.luca.pipeline.step.write.WriteStep
+import it.luca.pipeline.step.write.writer.WriteStep
 import it.luca.pipeline.utils.{JobProperties, SparkUtils}
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, SparkSession}

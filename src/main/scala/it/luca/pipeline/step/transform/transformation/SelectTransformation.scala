@@ -12,12 +12,12 @@ object SelectTransformation extends SingleSrcTransformation[SelectTransformation
   override def transform(transformationOptions: SelectTransformationOptions, dataFrame: DataFrame): DataFrame = {
 
     val (numberOfColumns, dataframeId): (Int, String) = (transformationOptions.columns.size, transformationOptions.inputSourceId)
-    logger.info(s"Identified $numberOfColumns column(s) to select for dataframe '$dataframeId'. Trying to parse each of these")
+    logger.info(s"Identified $numberOfColumns column(s) to select on dataframe '$dataframeId'. Trying to parse each of these")
     val selectColumns: Seq[Column] = transformationOptions
       .columns
       .map(EtlExpressionParser.parse)
 
-    logger.info(s"Successfully parsed each of the $numberOfColumns column(s) to select for dataframe '$dataframeId'")
+    logger.info(s"Successfully parsed each of the $numberOfColumns column(s) to select on dataframe '$dataframeId'")
     dataFrame.select(selectColumns: _*)
   }
 }

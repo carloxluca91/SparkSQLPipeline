@@ -16,7 +16,7 @@ object DropColumnTransformation extends SingleSrcTransformation[DropColumnTransf
     transformationOptions.columns
       .foldLeft(dataFrame)((df, columnName) => {
         if (!df.columns.contains(columnName)) {
-          logger.warn(s"Column '$columnName' is not defined in dataframe '$dataframeId'")
+          logger.warn(s"Column '$columnName' is not defined on dataframe '$dataframeId'")
         }
 
         df.drop(columnName)

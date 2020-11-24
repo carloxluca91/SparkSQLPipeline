@@ -2,6 +2,7 @@ package it.luca.pipeline.etl.parsing
 
 import it.luca.pipeline.etl.common.{AbstractExpression, SingleColumnExpression, StaticColumnExpression}
 import it.luca.pipeline.etl.catalog.{Col, CurrentDateOrTimestamp, Lit, ToDateOrTimestamp}
+import it.luca.pipeline.exception.{UndefinedCatalogExpression, UnmatchedExpressionException}
 import org.apache.log4j.Logger
 import org.apache.spark.sql.Column
 
@@ -11,9 +12,11 @@ object EtlExpressionParser {
 
   final def parse(etlExpression: String): Column = {
 
+    // Detect the matching expressions (hopefully only one)
     val matchingEtlExpressions: EtlExpression.ValueSet = EtlExpression.values
       .filter(v => v.regex.findFirstMatchIn(etlExpression).nonEmpty)
 
+    // If any, match it to its catalog counterpart
     if (matchingEtlExpressions.nonEmpty) {
 
       val matchingExpression: EtlExpression.Value = matchingEtlExpressions.head
@@ -22,11 +25,10 @@ object EtlExpressionParser {
         case EtlExpression.CurrentDateOrTimestamp => CurrentDateOrTimestamp(etlExpression)
         case EtlExpression.Lit => Lit(etlExpression)
         case EtlExpression.ToDateOrTimestamp => ToDateOrTimestamp(etlExpression)
-        case _ =>
-          //TODO: custom exception
-          throw new Exception
+        case _ => throw UndefinedCatalogExpression(matchingExpression)
       }
 
+      // Detect pattern of matched catalog expression
       abstractExpression match {
         case expression: SingleColumnExpression =>
 
@@ -40,10 +42,6 @@ object EtlExpressionParser {
           logger.info(s"Detected a ${classOf[StaticColumnExpression].getSimpleName} expression (${expression.asString})")
           expression.getColumn
       }
-
-    } else {
-      //TODO: custom exception
-      throw new Exception()
-    }
+    } else throw UnmatchedExpressionException(etlExpression)
   }
 }
