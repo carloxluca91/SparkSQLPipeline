@@ -1,12 +1,12 @@
-package it.luca.pipeline.etl.function
+package it.luca.pipeline.etl.catalog
 
-import it.luca.pipeline.etl.common.StaticExpression
-import it.luca.pipeline.etl.expression.EtlExpression
+import it.luca.pipeline.etl.common.StaticColumnExpression
+import it.luca.pipeline.etl.parsing.EtlExpression
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions.col
 
 case class ColExpression(override val expression: String)
-  extends StaticExpression(expression, EtlExpression.Col) {
+  extends StaticColumnExpression(expression, EtlExpression.Col) {
 
   private final val columnName: String = group(2)
 

@@ -1,4 +1,4 @@
-package it.luca.pipeline.etl.expression
+package it.luca.pipeline.etl.parsing
 
 object EtlExpression extends Enumeration {
 
@@ -8,5 +8,6 @@ object EtlExpression extends Enumeration {
   implicit def valueToETLExpressionVal(x: Value): Val = x.asInstanceOf[Val]
 
   val Col: Val = Val("^(col)\\('(\\w+)'\\)$".r)
+  val Lit: Val = Val("^(lit)\\(('?.+'?)\\)$".r)
 
 }
