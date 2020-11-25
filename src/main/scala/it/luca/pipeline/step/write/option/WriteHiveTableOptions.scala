@@ -7,6 +7,7 @@ case class WriteHiveTableOptions(override val destinationType: String,
                                  override val tableName: String,
                                  override val createDbIfNotExists: Option[String],
                                  dbPath: Option[String],
+                                 tablePath: Option[String],
                                  override val saveMode: String,
                                  override val partitionBy: Option[List[String]],
                                  override val coalesce: Option[Int])

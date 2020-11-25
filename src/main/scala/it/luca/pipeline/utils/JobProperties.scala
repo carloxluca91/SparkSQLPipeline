@@ -20,7 +20,6 @@ case class JobProperties(propertiesFile: String) {
   def get(key: String): String = {
 
     if(containsKey(key)) {
-
       val keyValue = jobProperties.getString(key)
       logger.info(s"Value of property $key is $keyValue")
       keyValue

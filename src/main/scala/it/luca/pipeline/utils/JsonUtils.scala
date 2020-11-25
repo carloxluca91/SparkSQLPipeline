@@ -43,4 +43,29 @@ object JsonUtils {
         value
     }
   }
+
+  final def decodeAndInterpolateJsonFile[T](jsonFilePath: String, jobProperties: JobProperties)
+                                           (implicit decodeJson: DecodeJson[T], typeTag: TypeTag[T]): T = {
+
+    val propertyValueRegex = "\"\\$\\{([\\w|.]+)}\"".r
+    val tClassName: String = typeOf[T].typeSymbol.name.toString
+    logger.info(s"Trying to parse provided json file ($jsonFilePath) as an object of type $tClassName")
+
+    // Open provided json file path, make it a single-line string and perform property interpolation
+    val bufferedSource: BufferedSource = Source.fromFile(jsonFilePath, "UTF-8")
+    val pipelineJsonString = bufferedSource.getLines().mkString
+    val pipelineJonStringWithInterpolatedProperties: String = propertyValueRegex
+      .replaceAllIn(pipelineJsonString, m => s""""${jobProperties.get(m.group(1))}"""")
+    bufferedSource.close()
+
+    // Try to parse the interpolated json string as an object of type T
+    pipelineJonStringWithInterpolatedProperties.decodeOption[T] match {
+      case None =>
+        logger.error(s"Unable to parse provided json file ($jsonFilePath) ")
+        throw JsonFileParsingException(jsonFilePath, tClassName)
+      case Some(value) =>
+        logger.info(s"Successfully parsed provided json file ($jsonFilePath) as an object of type $tClassName")
+        value
+    }
+  }
 }
