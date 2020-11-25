@@ -3,10 +3,10 @@ package it.luca.pipeline.step.read.option
 import argonaut._
 import it.luca.pipeline.json.{JsonField, JsonValue}
 import it.luca.pipeline.step.common.JDBCOptions
-import it.luca.pipeline.test.JsonSpec
+import it.luca.pipeline.test.AbstractJsonSpec
 import it.luca.pipeline.utils.JsonUtils
 
-class ReadTableOptionsSpec extends JsonSpec {
+class ReadTableOptionsSpec extends AbstractJsonSpec {
 
   private final val hiveSource = JsonValue.HiveSourceOrDestination.value
   private final val jdbcSource = JsonValue.JDBCSourceOrDestination.value

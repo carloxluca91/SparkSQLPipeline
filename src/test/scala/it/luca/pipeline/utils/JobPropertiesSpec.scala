@@ -6,7 +6,6 @@ class JobPropertiesSpec extends AbstractSpec {
 
   private final val existingKey = "jdbc.default.useSSL"
   private final val unExistingKey = "impossible.key.property"
-  private final val jobProperties: JobProperties = JobProperties("spark_application.properties")
 
   s"A ${className[JobProperties]} object" should
     "return the default value when a key is not present" in {

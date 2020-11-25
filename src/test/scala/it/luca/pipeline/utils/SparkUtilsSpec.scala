@@ -5,12 +5,12 @@ import java.io.{BufferedWriter, File, FileWriter}
 import argonaut.EncodeJson
 import it.luca.pipeline.json.JsonValue
 import it.luca.pipeline.step.read.option.{CsvColumnSpecification, CsvDataframeSchema}
-import it.luca.pipeline.test.JsonSpec
+import it.luca.pipeline.test.AbstractJsonSpec
 import org.apache.spark.sql.types.{DataTypes, StructField, StructType}
 
-class SparkUtilsSpec extends JsonSpec {
+class SparkUtilsSpec extends AbstractJsonSpec {
 
-  private final val SchemaFilePath = "csv_schema.json"
+  private final val SchemaFileName = "csv_schema.json"
   private final val UndefinedType = "undefined"
 
   s"A SparkUtils object" should
@@ -38,16 +38,13 @@ class SparkUtilsSpec extends JsonSpec {
 
     val inputCsvSchema = CsvDataframeSchema("df1", "first dataframe", csvColumnSpecifications)
 
-    // Encode as json and write on a file
+    // Write on a .json file
     implicit val encodeJsonColumn: EncodeJson[CsvColumnSpecification] = EncodeJson.derive[CsvColumnSpecification]
     implicit val encodeJsonSchema: EncodeJson[CsvDataframeSchema] = EncodeJson.derive[CsvDataframeSchema]
-    val jsonString: String = toJsonString(inputCsvSchema)
-    val bufferedWriter = new BufferedWriter(new FileWriter(new File(SchemaFilePath)))
-    bufferedWriter.write(jsonString)
-    bufferedWriter.close()
+    writeJsonFile[CsvDataframeSchema](inputCsvSchema, SchemaFileName)
 
     // Decode json file and perform assertions
-    val decodedCsvSchema: StructType = SparkUtils.fromSchemaToStructType(SchemaFilePath)
+    val decodedCsvSchema: StructType = SparkUtils.fromSchemaToStructType(SchemaFileName)
     assert(decodedCsvSchema.size == csvColumnSpecifications.size)
     decodedCsvSchema.zip(csvColumnSpecifications) foreach { t =>
 
@@ -57,6 +54,6 @@ class SparkUtilsSpec extends JsonSpec {
       assert(actual.dataType == SparkUtils.asSparkDataType(expected.dataType))
     }
 
-    new File(SchemaFilePath).delete()
+    deleteFile(SchemaFileName)
   }
 }

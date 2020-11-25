@@ -1,11 +1,14 @@
 package it.luca.pipeline.test
 
+import it.luca.pipeline.utils.JobProperties
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
 
 import scala.reflect.runtime.universe._
 
 abstract class AbstractSpec extends AnyFlatSpec with should.Matchers {
+
+  final val jobProperties: JobProperties = JobProperties("spark_application.properties")
 
   def className[T](implicit typeTag: TypeTag[T]): String = typeOf[T].typeSymbol.name.toString
 }

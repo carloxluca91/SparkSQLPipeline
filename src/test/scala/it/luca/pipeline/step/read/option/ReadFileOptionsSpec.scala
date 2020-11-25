@@ -2,10 +2,10 @@ package it.luca.pipeline.step.read.option
 
 import argonaut.EncodeJson
 import it.luca.pipeline.json.{JsonField, JsonValue}
-import it.luca.pipeline.test.JsonSpec
+import it.luca.pipeline.test.AbstractJsonSpec
 import it.luca.pipeline.utils.JsonUtils
 
-class ReadFileOptionsSpec extends JsonSpec {
+class ReadFileOptionsSpec extends AbstractJsonSpec {
 
   private final val csvSource = JsonValue.CsvSourceOrDestination.value
   private final val csvSrcOptionsApply: (Option[String], Option[String]) => ReadCsvOptions

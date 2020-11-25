@@ -21,7 +21,7 @@ case class JobProperties(propertiesFile: String) {
 
     if(containsKey(key)) {
       val keyValue = jobProperties.getString(key)
-      logger.info(s"Value of property $key is $keyValue")
+      logger.info(s"Value of property '$key' is '$keyValue'")
       keyValue
     } else {
       throw UnexistingKeyException(key)
@@ -34,12 +34,12 @@ case class JobProperties(propertiesFile: String) {
       val key: String = keyOpt.get
       Try {get(key)} match {
         case Failure(_) =>
-          logger.warn(s"Key '$key' is not present within .properties file. Thus, returning the default value ($defaultValue)")
+          logger.warn(s"Key '$key' is not present within .properties file. Thus, returning the default value ('$defaultValue')")
           defaultValue
         case Success(value) => value
       }
     } else {
-      logger.warn(s"Input key is null. Thus, returning the default value ($defaultValue)")
+      logger.warn(s"Input key is null. Thus, returning the default value ('$defaultValue')")
       defaultValue
     }
   }
