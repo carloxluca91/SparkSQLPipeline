@@ -11,7 +11,7 @@ class JsonUtilsSpec extends AbstractJsonSpec {
   private implicit val decodeJson: DecodeJson[TestClass] = DecodeJson.derive[TestClass]
 
   "A JsonUtils object" should
-    s"correctly interpolate a .json string using a ${className[JobProperties]} object" in {
+    s"correctly interpolate a .json string against a ${className[JobProperties]} object" in {
 
     // Assert that both property keys are within test properties file
     val jdbcDefaultUrlKey = "jdbc.default.url"
@@ -29,5 +29,6 @@ class JsonUtilsSpec extends AbstractJsonSpec {
     assert(testClassDecodedInstance.jdbcUrl == expectedUrl)
     assert(testClassDecodedInstance.jdbcDriver == expectedDriver)
     toJsonString(testClassDecodedInstance)
+    deleteFile(testJsonFile)
   }
 }
