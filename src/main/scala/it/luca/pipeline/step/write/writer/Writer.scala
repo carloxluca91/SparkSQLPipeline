@@ -1,7 +1,6 @@
 package it.luca.pipeline.step.write.writer
 
 import it.luca.pipeline.step.write.option.WriteOptions
-import it.luca.pipeline.utils.JobProperties
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, DataFrameWriter, Row, SparkSession}
 
@@ -25,6 +24,6 @@ trait Writer[T <: WriteOptions] {
     dataframeWriteMaybePartitioned
   }
 
-  def write(dataFrame: DataFrame, writeOptions: T, sparkSession: SparkSession, jobProperties: JobProperties): Unit
+  def write(dataFrame: DataFrame, writeOptions: T, sparkSession: SparkSession): Unit
 
 }

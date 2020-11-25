@@ -36,7 +36,7 @@ object LogRecord {
     val applicationName: String = sparkContext.appName
     val applicationStartTime = Timestamp.from(Instant.ofEpochMilli(sparkContext.startTime))
     val applicationStartDate = new Date(sparkContext.startTime)
-    val stepFinishTime = Timestamp.from(Instant.now())
+    val stepFinishTime = new Timestamp(System.currentTimeMillis())
     val stepFinishDate = new Date(System.currentTimeMillis())
     val exceptionMsgOpt: Option[String] = exceptionOpt match {
       case None => None

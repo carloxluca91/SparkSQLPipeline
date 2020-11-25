@@ -2,6 +2,7 @@ package it.luca.pipeline.utils
 
 import argonaut.{DecodeJson, EncodeJson}
 import it.luca.pipeline.test.AbstractJsonSpec
+import org.apache.commons.configuration.PropertiesConfiguration
 
 class JsonUtilsSpec extends AbstractJsonSpec {
 
@@ -11,14 +12,14 @@ class JsonUtilsSpec extends AbstractJsonSpec {
   private implicit val decodeJson: DecodeJson[TestClass] = DecodeJson.derive[TestClass]
 
   "A JsonUtils object" should
-    s"correctly interpolate a .json string against a ${className[JobProperties]} object" in {
+    s"correctly interpolate a .json string against a ${className[PropertiesConfiguration]} object" in {
 
     // Assert that both property keys are within test properties file
     val jdbcDefaultUrlKey = "jdbc.default.url"
     val jdbcDefaultDriverKey = "jdbc.default.driver.className"
     (jdbcDefaultUrlKey :: jdbcDefaultDriverKey :: Nil) foreach {k => assert(jobProperties.containsKey(k))}
-    val expectedUrl = jobProperties.get(jdbcDefaultUrlKey)
-    val expectedDriver = jobProperties.get(jdbcDefaultDriverKey)
+    val expectedUrl = jobProperties.getString(jdbcDefaultUrlKey)
+    val expectedDriver = jobProperties.getString(jdbcDefaultDriverKey)
 
     // Define a case class holding such property keys and write it as .json file
     val testClassInstance = TestClass(s"$${$jdbcDefaultUrlKey}", s"$${$jdbcDefaultDriverKey}")

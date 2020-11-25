@@ -7,7 +7,7 @@ import it.luca.pipeline.step.common.AbstractStep
 import it.luca.pipeline.step.read.reader.ReadStep
 import it.luca.pipeline.step.transform.transformation.TransformStep
 import it.luca.pipeline.step.write.writer.WriteStep
-import it.luca.pipeline.utils.{JobProperties, SparkUtils}
+import it.luca.pipeline.utils.SparkUtils
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -35,7 +35,7 @@ case class Pipeline(name: String, description: String, pipelineSteps: Option[Lis
     dataframeMap(dataframeId) = dataFrame
   }
 
-  def run(sparkSession: SparkSession, jobProperties: JobProperties): (Boolean, Seq[LogRecord]) = {
+  def run(sparkSession: SparkSession): (Boolean, Seq[LogRecord]) = {
 
     if (pipelineSteps.nonEmpty) {
 
@@ -48,7 +48,7 @@ case class Pipeline(name: String, description: String, pipelineSteps: Option[Lis
         val tryToExecuteStep: Try[Unit] = Try {
           abstractStep match {
             case readStep: ReadStep =>
-              val readDataframe: DataFrame = readStep.read(sparkSession, jobProperties)
+              val readDataframe: DataFrame = readStep.read(sparkSession)
               updateDataframeMap(readStep.dataframeId, readDataframe)
 
             case transformStep: TransformStep =>

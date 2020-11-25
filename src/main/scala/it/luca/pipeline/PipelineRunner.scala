@@ -1,7 +1,8 @@
 package it.luca.pipeline
 
 import it.luca.pipeline.data.LogRecord
-import it.luca.pipeline.utils.{JDBCUtils, JobProperties, JsonUtils, SparkUtils}
+import it.luca.pipeline.utils.{JDBCUtils, JsonUtils, SparkUtils}
+import org.apache.commons.configuration.{ConfigurationException, PropertiesConfiguration}
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
 
@@ -9,9 +10,9 @@ object PipelineRunner {
 
   private final val logger = Logger.getLogger(getClass)
 
-  private final def getPipelineFilePathOpt(pipelineName: String, sparkSession: SparkSession, jobProperties: JobProperties): Option[String] = {
+  private final def getPipelineFilePathOpt(pipelineName: String, sparkSession: SparkSession, jobProperties: PropertiesConfiguration): Option[String] = {
 
-    val hiveDefaultDbName = jobProperties.get("hive.database.default.name")
+    val hiveDefaultDbName = jobProperties.getString("hive.database.default.name")
     val existsDefaultHiveDb = sparkSession.catalog.databaseExists(hiveDefaultDbName.toLowerCase)
     if (!existsDefaultHiveDb) {
 
@@ -21,12 +22,12 @@ object PipelineRunner {
       else s"$hiveDbWarningMsg. Thus, running 'INITIAL_LOAD' pipeline instead of '$pipelineName'"
 
       logger.warn(warningMsg)
-      Some(jobProperties.get("initialLoad.file.path"))
+      Some(jobProperties.getString("initialLoad.file.path"))
     } else {
 
       // Otherwise, run provided pipeline (or at least try to ;)
-      val pipelineInfoTableName = jobProperties.get("hive.table.pipelineInfo.name")
-      val pipelineInfoTableNameFull = jobProperties.get("hive.table.pipelineInfo.fullName")
+      val pipelineInfoTableName = jobProperties.getString("hive.table.pipelineInfo.name")
+      val pipelineInfoTableNameFull = jobProperties.getString("hive.table.pipelineInfo.fullName")
       val existsPipelineInfoTable: Boolean = sparkSession.catalog.tableExists(pipelineInfoTableName, hiveDefaultDbName)
       val isPipelineInfoTableNotEmpty: Boolean = existsPipelineInfoTable && sparkSession.table(pipelineInfoTableNameFull).count > 0
       if (existsPipelineInfoTable & isPipelineInfoTableNotEmpty) {
@@ -37,8 +38,6 @@ object PipelineRunner {
 
         val sqlQuery = s"SELECT file_name FROM $pipelineInfoTableNameFull WHERE trim(lower(pipeline_name)) = '${pipelineName.toLowerCase}'"
         val pipelineInfoRows: Array[Row] = sparkSession.sql(sqlQuery).collect()
-
-        // If no information is found, sorry ;)
         if (pipelineInfoRows.isEmpty) {
           None
         } else {
@@ -56,12 +55,12 @@ object PipelineRunner {
         val warningMsg = if (pipelineName equalsIgnoreCase "INITIAL_LOAD") pipelineInfoTableWarningMsg else
           s"$pipelineInfoTableWarningMsg. Thus, running 'INITIAL_LOAD' pipeline instead of '$pipelineName'"
         logger.warn(warningMsg)
-        Some(jobProperties.get("initialLoad.file.path"))
+        Some(jobProperties.getString("initialLoad.file.path"))
       }
     }
   }
 
-  private def logToJDBC(logRecords: Seq[LogRecord], sparkSession: SparkSession, jobProperties: JobProperties): Unit = {
+  private def logToJDBC(logRecords: Seq[LogRecord], sparkSession: SparkSession, jobProperties: PropertiesConfiguration): Unit = {
 
     import sparkSession.implicits._
 
@@ -72,19 +71,19 @@ object PipelineRunner {
       s"into a ${classOf[DataFrame].getSimpleName}")
 
     // Extract relevant info for creating JDBC connection
-    val jdbcLoggingDatabase = jobProperties.get("jdbc.database.default.name")
-    val jdbcUrl = jobProperties.get("jdbc.default.url")
-    val jdbcDriver = jobProperties.get("jdbc.default.driver.className")
-    val jdbcUserName = jobProperties.get("jdbc.default.userName")
-    val jdbcPassWord = jobProperties.get("jdbc.default.passWord")
-    val jdbcUseSSL = jobProperties.get("jdbc.default.useSSL")
+    val jdbcLoggingDatabase = jobProperties.getString("jdbc.database.default.name")
+    val jdbcUrl = jobProperties.getString("jdbc.default.url")
+    val jdbcDriver = jobProperties.getString("jdbc.default.driver.className")
+    val jdbcUserName = jobProperties.getString("jdbc.default.userName")
+    val jdbcPassWord = jobProperties.getString("jdbc.default.passWord")
+    val jdbcUseSSL = jobProperties.getString("jdbc.default.useSSL")
 
     // Create database hosting logTable if necessary
     val connection: java.sql.Connection = JDBCUtils.getConnection(jdbcUrl, jdbcDriver, jdbcUserName, jdbcPassWord, jdbcUseSSL)
     JDBCUtils.createDbIfNotExists(jdbcLoggingDatabase, connection)
 
     // Setup DataFrameWriter JDBC options
-    val logTableFullName = jobProperties.get("jdbc.table.logging.table.fullName")
+    val logTableFullName = jobProperties.getString("jdbc.table.logging.table.fullName")
     val jdbcOptions: Map[String, String] = Map(
 
       "url" ->jdbcUrl,
@@ -106,20 +105,22 @@ object PipelineRunner {
     logger.info(s"Successfully inserted ${logRecords.size} logging record(s) within table '$logTableFullName'")
   }
 
+  @throws[ConfigurationException]
   def run(pipelineName: String, propertiesFile: String): Unit = {
 
     lazy val sparkSession: SparkSession = SparkUtils.getOrCreateSparkSession
-    val jobProperties: JobProperties = JobProperties(propertiesFile)
+    val jobProperties = new PropertiesConfiguration(propertiesFile)
+    logger.info("Successfully loaded job .properties file")
+
     val pipelineFilePathOpt: Option[String] = getPipelineFilePathOpt(pipelineName, sparkSession, jobProperties)
     if (pipelineFilePathOpt.nonEmpty) {
 
       // Try to parse provided json file as a Pipeline and run it
-      val pipeline: Pipeline = JsonUtils.decodeJsonFile[Pipeline](pipelineFilePathOpt.get)
-      val (pipelineFullyExecuted, logRecords) : (Boolean, Seq[LogRecord]) = pipeline.run(sparkSession, jobProperties)
+      val pipeline: Pipeline = JsonUtils.decodeAndInterpolateJsonFile[Pipeline](pipelineFilePathOpt.get, jobProperties)
+      val (pipelineFullyExecuted, logRecords) : (Boolean, Seq[LogRecord]) = pipeline.run(sparkSession)
       logToJDBC(logRecords, sparkSession, jobProperties)
       if (pipelineFullyExecuted) {
         logger.info(s"Successfully executed whole pipeline '$pipelineName'")
-
       } else {
         logger.warn(s"Unable to fully execute pipeline '$pipelineName'")
       }

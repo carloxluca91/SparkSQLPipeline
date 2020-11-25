@@ -2,7 +2,7 @@ package it.luca.pipeline.etl.parsing
 
 import it.luca.pipeline.etl.common.{AbstractExpression, SingleColumnExpression, StaticColumnExpression}
 import it.luca.pipeline.etl.catalog.{Col, CurrentDateOrTimestamp, Lit, ToDateOrTimestamp}
-import it.luca.pipeline.exception.{UndefinedCatalogExpression, UnmatchedExpressionException}
+import it.luca.pipeline.exception.{UndefinedCatalogExpression, UnmatchedEtlExpressionException}
 import org.apache.log4j.Logger
 import org.apache.spark.sql.Column
 
@@ -42,6 +42,6 @@ object EtlExpressionParser {
           logger.info(s"Detected a ${classOf[StaticColumnExpression].getSimpleName} expression (${expression.asString})")
           expression.getColumn
       }
-    } else throw UnmatchedExpressionException(etlExpression)
+    } else throw UnmatchedEtlExpressionException(etlExpression)
   }
 }
