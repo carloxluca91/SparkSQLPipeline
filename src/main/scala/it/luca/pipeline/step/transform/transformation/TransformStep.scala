@@ -21,8 +21,8 @@ case class TransformStep(override val name: String,
     transformationOptions match {
       case options: JoinTransformationOptions =>
 
-        val leftDataframe: DataFrame = dataframeMap(options.inputSourceIds.head)
-        val rightDataframe: DataFrame = dataframeMap(options.inputSourceIds.last)
+        val leftDataframe: DataFrame = dataframeMap(options.leftDataframeId)
+        val rightDataframe: DataFrame = dataframeMap(options.rightDataframeId)
         rightDataframe
 
       case options: SingleSourceTransformationOptions =>
@@ -30,7 +30,7 @@ case class TransformStep(override val name: String,
         val inputDataframe: DataFrame = dataframeMap(options.inputSourceId)
         options match {
           case d: DropColumnTransformationOptions => DropColumnTransformation.transform(d, inputDataframe)
-          case s: SelectTransformationOptions => dataframeMap("a")
+          case s: SelectTransformationOptions => SelectTransformation.transform(s, inputDataframe)
           case w: WithColumnTransformationOptions => WithColumnTransformation.transform(w, inputDataframe)
         }
     }

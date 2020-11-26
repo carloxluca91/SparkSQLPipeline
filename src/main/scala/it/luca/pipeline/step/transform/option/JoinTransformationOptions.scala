@@ -1,5 +1,8 @@
 package it.luca.pipeline.step.transform.option
 
-abstract class JoinTransformationOptions(override val transformationType: String,
-                                         val inputSourceIds: List[String])
+case class JoinTransformationOptions(override val transformationType: String,
+                                     leftDataframeId: String,
+                                     rightDataframeId: String,
+                                     joinType: String,
+                                     joinCondition: String)
   extends TransformationOptions(transformationType)

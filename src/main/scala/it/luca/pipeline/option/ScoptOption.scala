@@ -8,6 +8,6 @@ object ScoptOption extends Enumeration {
   import scala.language.implicitConversions
   implicit def valueToScoptOptionVal(x: Value): Val = x.asInstanceOf[Val]
 
-  val PipelineName: Val = Val('n', "name", "Name of pipeline ot be triggered")
+  val PipelineName: Val = Val('n', "name", "Name of pipeline to be triggered")
   val PropertiesFile: Val = Val('p', "properties", "Path of .properties file")
 }
