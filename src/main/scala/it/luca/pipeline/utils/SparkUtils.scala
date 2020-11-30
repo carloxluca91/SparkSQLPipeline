@@ -50,7 +50,7 @@ object SparkUtils {
       .config("hive.exec.dynamic.partition.mode", "nonstrict")
       .getOrCreate
 
-    logger.info(s"Successfully initialized ${classOf[SparkSession].getSimpleName} " +
+    logger.info(s"Successfully initialized a ${classOf[SparkSession].getSimpleName} " +
       s"for application '${sparkSession.sparkContext.appName}', " +
       s"applicationId = ${sparkSession.sparkContext.applicationId}, " +
       s"UI url = ${sparkSession.sparkContext.uiWebUrl}")

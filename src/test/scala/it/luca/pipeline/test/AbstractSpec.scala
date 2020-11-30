@@ -8,7 +8,8 @@ import scala.reflect.runtime.universe._
 
 abstract class AbstractSpec extends AnyFlatSpec with should.Matchers {
 
-  final val jobProperties: PropertiesConfiguration = new PropertiesConfiguration("spark_application.properties")
+  final val jobProperties: PropertiesConfiguration = new PropertiesConfiguration()
+  jobProperties.load(getClass.getClassLoader.getResourceAsStream("spark_application.properties"))
 
   def className[T](implicit typeTag: TypeTag[T]): String = typeOf[T].typeSymbol.name.toString
 }

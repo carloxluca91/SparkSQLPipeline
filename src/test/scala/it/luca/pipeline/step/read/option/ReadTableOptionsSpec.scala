@@ -8,9 +8,10 @@ import it.luca.pipeline.utils.JsonUtils
 
 class ReadTableOptionsSpec extends AbstractJsonSpec {
 
-  private final val hiveSource = JsonValue.HiveSourceOrDestination.value
-  private final val jdbcSource = JsonValue.JDBCSourceOrDestination.value
-  private final val jdbcTableSrcOptionsApply: Option[String] => ReadJDBCTableOptions = opt => {
+  override protected val testJsonFilesToDelete: Seq[String] = Seq.empty[String]
+  private val hiveSource = JsonValue.HiveSourceOrDestination.value
+  private val jdbcSource = JsonValue.JDBCSourceOrDestination.value
+  private val jdbcTableSrcOptionsApply: Option[String] => ReadJDBCTableOptions = opt => {
     val jdbcOptions =  JDBCOptions("url", "driver", "user", "pw", opt)
     ReadJDBCTableOptions(jdbcSource, "db", "table", jdbcOptions)
   }
@@ -29,7 +30,8 @@ class ReadTableOptionsSpec extends AbstractJsonSpec {
     assert(hiveTableSrcOptions.tableName == "table")
   }
 
-  it should s"be correctly parsed as a ${className[ReadJDBCTableOptions]} object " +
+  it should
+    s"be correctly parsed as a ${className[ReadJDBCTableOptions]} object " +
     s"when ${JsonField.SourceType.label} = '$jdbcSource'" in {
 
     implicit val encodeJsonJDBCOptions: EncodeJson[JDBCOptions] = EncodeJson.derive[JDBCOptions]

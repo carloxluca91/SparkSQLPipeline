@@ -7,8 +7,9 @@ import it.luca.pipeline.utils.JsonUtils
 
 class ReadFileOptionsSpec extends AbstractJsonSpec {
 
-  private final val csvSource = JsonValue.CsvSourceOrDestination.value
-  private final val csvSrcOptionsApply: (Option[String], Option[String]) => ReadCsvOptions
+  override protected val testJsonFilesToDelete: Seq[String] = Seq.empty[String]
+  private val csvSource = JsonValue.CsvSourceOrDestination.value
+  private val csvSrcOptionsApply: (Option[String], Option[String]) => ReadCsvOptions
   = ReadCsvOptions(JsonValue.CsvSourceOrDestination.value, "path", "schema", _: Option[String], _: Option[String])
 
   s"A ${className[ReadOptions]} object" should

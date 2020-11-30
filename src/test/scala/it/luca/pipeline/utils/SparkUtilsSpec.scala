@@ -1,7 +1,5 @@
 package it.luca.pipeline.utils
 
-import java.io.{BufferedWriter, File, FileWriter}
-
 import argonaut.EncodeJson
 import it.luca.pipeline.json.JsonValue
 import it.luca.pipeline.step.read.option.{CsvColumnSpecification, CsvDataframeSchema}
@@ -10,8 +8,9 @@ import org.apache.spark.sql.types.{DataTypes, StructField, StructType}
 
 class SparkUtilsSpec extends AbstractJsonSpec {
 
-  private final val SchemaFileName = "csv_schema.json"
-  private final val UndefinedType = "undefined"
+  private val SchemaFileName = "sparkUtilsSpec.json"
+  override protected val testJsonFilesToDelete: Seq[String] = SchemaFileName :: Nil
+  private val UndefinedType = "undefined"
 
   s"A SparkUtils object" should
     s"return default datatype (${DataTypes.StringType}) " +
@@ -20,13 +19,14 @@ class SparkUtilsSpec extends AbstractJsonSpec {
     assert(SparkUtils.asSparkDataType(UndefinedType) == DataTypes.StringType)
   }
 
-  it should s"be able to parse a suitable .json string as a ${className[StructType]} object" in {
+  it should
+    s"be able to parse a suitable .json string as a ${className[StructType]} object" in {
 
     // Initialize some column objects
-    val actualNullableFlag = false
+    val expectedFlag = false
     val columnSpecificationMap: Map[String, (String, String, Boolean)] = Map(
-      "col1" -> ("first", JsonValue.StringType.value, actualNullableFlag),
-      "col2" -> ("second", JsonValue.DateType.value, actualNullableFlag))
+      "col1" -> ("first", JsonValue.StringType.value, expectedFlag),
+      "col2" -> ("second", JsonValue.DateType.value, expectedFlag))
 
     // Initialize a schema defined by such column objects
     val csvColumnSpecifications: List[CsvColumnSpecification] = columnSpecificationMap
@@ -41,10 +41,10 @@ class SparkUtilsSpec extends AbstractJsonSpec {
     // Write on a .json file
     implicit val encodeJsonColumn: EncodeJson[CsvColumnSpecification] = EncodeJson.derive[CsvColumnSpecification]
     implicit val encodeJsonSchema: EncodeJson[CsvDataframeSchema] = EncodeJson.derive[CsvDataframeSchema]
-    writeJsonFile[CsvDataframeSchema](inputCsvSchema, SchemaFileName)
+    writeAsJsonFileInTestResources[CsvDataframeSchema](inputCsvSchema, SchemaFileName)
 
     // Decode json file and perform assertions
-    val decodedCsvSchema: StructType = SparkUtils.fromSchemaToStructType(SchemaFileName)
+    val decodedCsvSchema: StructType = SparkUtils.fromSchemaToStructType(asTestResource(SchemaFileName))
     assert(decodedCsvSchema.size == csvColumnSpecifications.size)
     decodedCsvSchema.zip(csvColumnSpecifications) foreach { t =>
 
@@ -53,7 +53,5 @@ class SparkUtilsSpec extends AbstractJsonSpec {
       assert(actual.nullable == expected.nullable)
       assert(actual.dataType == SparkUtils.asSparkDataType(expected.dataType))
     }
-
-    deleteFile(SchemaFileName)
   }
 }

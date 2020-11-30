@@ -1,7 +1,7 @@
 package it.luca.pipeline.utils
 
 import argonaut._, Argonaut._
-import it.luca.pipeline.exception.{JsonFileParsingException, JsonStringParsingException, UnexistingKeyException}
+import it.luca.pipeline.exception.{JsonFileParsingException, JsonStringParsingException, UnexistingPropertyException}
 import org.apache.commons.configuration.PropertiesConfiguration
 import org.apache.log4j.Logger
 
@@ -45,7 +45,7 @@ object JsonUtils {
     }
   }
 
-  @throws[UnexistingKeyException]
+  @throws[UnexistingPropertyException]
   @throws[JsonFileParsingException]
   final def decodeAndInterpolateJsonFile[T](jsonFilePath: String, jobProperties: PropertiesConfiguration)
                                            (implicit decodeJson: DecodeJson[T], typeTag: TypeTag[T]): T = {
@@ -55,7 +55,7 @@ object JsonUtils {
     val pipelineJsonString = bufferedSource.getLines().mkString
     val getPropertyValue: String => String =
       key => Option(jobProperties.getString(key)) match {
-        case None => throw UnexistingKeyException(key)
+        case None => throw UnexistingPropertyException(key)
         case Some(x) => x
       }
 

@@ -26,8 +26,8 @@ abstract class MultipleColumnExpression(override val expression: String,
       }
 
       if (numberOfOpenParentheses == 0 && currentChar == ')') {
-        expressions += str.substring(startIndex, iterator.getIndex + 1)
-        startIndex = iterator.getIndex + 3
+        expressions += str.substring(startIndex, iterator.getIndex + 1).trim
+        startIndex = iterator.getIndex + 2
       }
 
       iterator.next()
