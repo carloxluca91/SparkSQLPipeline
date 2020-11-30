@@ -10,7 +10,7 @@ import scala.util.matching.Regex
 case class Lit(override val expression: String)
   extends StaticColumnExpression(expression, EtlExpression.Lit) {
 
-  final val litValue: String = group(2)
+  private val litValue: String = group(2)
 
   override def getColumn: Column = {
 

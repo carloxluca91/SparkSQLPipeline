@@ -8,11 +8,13 @@ object HiveTableWriter extends Writer[WriteHiveTableOptions] {
 
   private final val logger = Logger.getLogger(getClass)
 
-  override def write(dataFrame: DataFrame, writeOptions: WriteHiveTableOptions, sparkSession: SparkSession): Unit = {
+  override def write(dataFrame: DataFrame, writeOptions: WriteHiveTableOptions): Unit = {
 
     val dataframeWriter: DataFrameWriter[Row] = dataFrameWriter(dataFrame, writeOptions)
     val (dbName, tableName, saveMode): (String, String, String) = (writeOptions.dbName, writeOptions.tableName, writeOptions.saveMode)
     val fullTableName = s"$dbName.$tableName"
+
+    val sparkSession = dataFrame.sparkSession
     createDbIfNotExists(sparkSession, writeOptions)
     if (sparkSession.catalog.tableExists(dbName, tableName)) {
 

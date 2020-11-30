@@ -8,7 +8,7 @@ import org.apache.spark.sql.functions.col
 case class Col(override val expression: String)
   extends StaticColumnExpression(expression, EtlExpression.Col) {
 
-  private final val columnName: String = group(2)
+  private val columnName: String = group(2)
 
   override def getColumn: Column = col(columnName)
 

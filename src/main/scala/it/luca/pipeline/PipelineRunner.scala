@@ -2,15 +2,15 @@ package it.luca.pipeline
 
 import it.luca.pipeline.data.LogRecord
 import it.luca.pipeline.utils.{JDBCUtils, JsonUtils, SparkUtils}
-import org.apache.commons.configuration.{ConfigurationException, PropertiesConfiguration}
+import org.apache.commons.configuration.PropertiesConfiguration
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
 
 object PipelineRunner {
 
-  private final val logger = Logger.getLogger(getClass)
+  private val logger = Logger.getLogger(getClass)
 
-  private final def getPipelineFilePathOpt(pipelineName: String, sparkSession: SparkSession, jobProperties: PropertiesConfiguration): Option[String] = {
+  private def getPipelineFilePathOpt(pipelineName: String, sparkSession: SparkSession, jobProperties: PropertiesConfiguration): Option[String] = {
 
     val hiveDefaultDbName = jobProperties.getString("hive.database.default.name")
     val existsDefaultHiveDb = sparkSession.catalog.databaseExists(hiveDefaultDbName.toLowerCase)
@@ -84,20 +84,12 @@ object PipelineRunner {
 
     // Setup DataFrameWriter JDBC options
     val logTableFullName = jobProperties.getString("jdbc.table.logging.table.fullName")
-    val jdbcOptions: Map[String, String] = Map(
-
-      "url" ->jdbcUrl,
-      "driver" -> jdbcDriver,
-      "user" -> jdbcUserName,
-      "password" -> jdbcPassWord,
-      "useSSL" -> jdbcUseSSL
-    )
-
+    val sparkWriterJDBCOptions: Map[String, String] = JDBCUtils.getJDBCOptionsForSparkWriter(jdbcUrl, jdbcDriver, jdbcUserName, jdbcPassWord, jdbcUseSSL)
     logger.info(s"Logging dataframe schema: ${SparkUtils.dataframeSchema(logRecordDf)}")
     logRecordDf.coalesce(1)
       .write
       .format("jdbc")
-      .options(jdbcOptions)
+      .options(sparkWriterJDBCOptions)
       .option("dbTable", logTableFullName)
       .mode(SaveMode.Append)
       .save
@@ -105,7 +97,6 @@ object PipelineRunner {
     logger.info(s"Successfully inserted ${logRecords.size} logging record(s) within table '$logTableFullName'")
   }
 
-  @throws[ConfigurationException]
   def run(pipelineName: String, propertiesFile: String): Unit = {
 
     lazy val sparkSession: SparkSession = SparkUtils.getOrCreateSparkSession

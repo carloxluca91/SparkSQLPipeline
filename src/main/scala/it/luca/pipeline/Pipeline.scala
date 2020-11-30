@@ -18,8 +18,7 @@ case class Pipeline(name: String, description: String, pipelineSteps: Option[Lis
 
   private final val logger = Logger.getLogger(classOf[Pipeline])
   private final val dataframeMap: mutable.Map[String, DataFrame] = mutable.Map.empty[String, DataFrame]
-
-  private def updateDataframeMap(dataframeId: String, dataFrame: DataFrame): Unit = {
+  private def updateDataframeMap(dataframeId:String, dataFrame: DataFrame): Unit = {
 
     val inputDfSchema: String = SparkUtils.dataframeSchema(dataFrame)
     if (dataframeMap contains dataframeId) {
@@ -33,6 +32,7 @@ case class Pipeline(name: String, description: String, pipelineSteps: Option[Lis
     }
 
     dataframeMap(dataframeId) = dataFrame
+    logger.info(s"Successfully updated dataframeMap")
   }
 
   def run(sparkSession: SparkSession): (Boolean, Seq[LogRecord]) = {
@@ -44,7 +44,8 @@ case class Pipeline(name: String, description: String, pipelineSteps: Option[Lis
       for ((abstractStep, stepIndex) <- pipelineSteps.get.zipWithIndex) {
 
         // Try to execute them one by one according to matched pattern
-        val (stepName, stepType): (String, String) = (abstractStep.name, abstractStep.stepType)
+        val stepName: String = abstractStep.name
+        logger.info(s"Starting to execute step # $stepIndex ('$stepName')")
         val tryToExecuteStep: Try[Unit] = Try {
           abstractStep match {
             case readStep: ReadStep =>
@@ -57,7 +58,7 @@ case class Pipeline(name: String, description: String, pipelineSteps: Option[Lis
 
             case writeStep: WriteStep =>
               val dataframeToWrite: DataFrame = dataframeMap(writeStep.dataframeId)
-              writeStep.write(dataframeToWrite, sparkSession)
+              writeStep.write(dataframeToWrite)
           }
         }
 
@@ -65,14 +66,14 @@ case class Pipeline(name: String, description: String, pipelineSteps: Option[Lis
           case Failure(e) =>
 
             // If the step triggered an exception, create a new LogRecord reporting what happened and return the ones gathered so far
-            logger.error(s"Caught exception while trying to execute step # $stepIndex ('$stepName', type '$stepType'). Stack trace: ", e)
+            logger.error(s"Caught exception while trying to execute step # $stepIndex ('$stepName'). Stack trace: ", e)
             logRecords.append(LogRecord(name, description, stepIndex, abstractStep, sparkSession.sparkContext, Some(e)))
             return (false, logRecords)
 
           case Success(_) =>
 
             // Otherwise, just add this one and continue looping
-            logger.info(s"Successfully executed step # $stepIndex ('$stepName', type '$stepType')")
+            logger.info(s"Successfully executed step # $stepIndex ('$stepName')")
             logRecords.append(LogRecord(name, description, stepIndex, abstractStep, sparkSession.sparkContext, None))
         }
       }

@@ -8,7 +8,7 @@ import org.apache.spark.sql.functions.{to_date, to_timestamp}
 case class ToDateOrTimestamp(override val expression: String)
   extends SingleColumnExpression(expression, EtlExpression.ToDateOrTimestamp) {
 
-  final val format: String = group(3)
+  private val format: String = group(3)
 
   override def getColumn(inputColumn: Column): Column = {
 

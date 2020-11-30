@@ -19,7 +19,7 @@ object EtlExpressionParser {
     // If any, match it to its catalog counterpart
     if (matchingEtlExpressions.nonEmpty) {
 
-      val matchingExpression: EtlExpression.Value = matchingEtlExpressions.head
+      val matchingExpression = matchingEtlExpressions.head
       val abstractExpression: AbstractExpression = matchingExpression match {
         case EtlExpression.Col => Col(etlExpression)
         case EtlExpression.CurrentDateOrTimestamp => CurrentDateOrTimestamp(etlExpression)
