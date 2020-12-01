@@ -1,7 +1,8 @@
 package it.luca.pipeline.step.read.reader
 
+import it.luca.pipeline.spark.SparkUtils
+import it.luca.pipeline.step.read.common.Reader
 import it.luca.pipeline.step.read.option.ReadCsvOptions
-import it.luca.pipeline.utils.SparkUtils
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, SparkSession}
 

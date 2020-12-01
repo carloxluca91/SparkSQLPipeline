@@ -1,9 +1,9 @@
 package it.luca.pipeline.step.read.option
 
 import argonaut.EncodeJson
-import it.luca.pipeline.json.{JsonField, JsonValue}
+import it.luca.pipeline.json.{JsonField, JsonUtils, JsonValue}
+import it.luca.pipeline.step.read.common.ReadOptions
 import it.luca.pipeline.test.AbstractJsonSpec
-import it.luca.pipeline.utils.JsonUtils
 
 class ReadFileOptionsSpec extends AbstractJsonSpec {
 

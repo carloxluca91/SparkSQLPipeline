@@ -1,5 +1,6 @@
 package it.luca.pipeline.step.read.reader
 
+import it.luca.pipeline.step.read.common.Reader
 import it.luca.pipeline.step.read.option.ReadHiveTableOptions
 import org.apache.spark.sql.{DataFrame, SparkSession}
 

@@ -1,5 +1,6 @@
 package it.luca.pipeline.step.write.writer
 
+import it.luca.pipeline.step.write.common.Writer
 import it.luca.pipeline.step.write.option.WriteHiveTableOptions
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, DataFrameWriter, Row, SparkSession}

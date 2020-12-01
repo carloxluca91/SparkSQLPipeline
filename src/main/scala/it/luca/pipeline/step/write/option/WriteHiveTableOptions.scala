@@ -1,6 +1,7 @@
 package it.luca.pipeline.step.write.option
 
 import argonaut.DecodeJson
+import it.luca.pipeline.step.write.common.WriteTableOptions
 
 case class WriteHiveTableOptions(override val destinationType: String,
                                  override val dbName: String,

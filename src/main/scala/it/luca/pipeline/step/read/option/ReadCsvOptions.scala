@@ -1,6 +1,7 @@
 package it.luca.pipeline.step.read.option
 
 import argonaut.DecodeJson
+import it.luca.pipeline.step.read.common.ReadFileOptions
 
 case class ReadCsvOptions(override val sourceType: String,
                           override val path: String,

@@ -1,6 +1,6 @@
 package it.luca.pipeline.exception
 
-import it.luca.pipeline.etl.parsing.EtlExpression
+import it.luca.pipeline.spark.etl.parsing.EtlExpression
 
 case class UnmatchedEtlExpressionException(etlExpression: String)
   extends Throwable(s"Unable to match following expression ($etlExpression) " +

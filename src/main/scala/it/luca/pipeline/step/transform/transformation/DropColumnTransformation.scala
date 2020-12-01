@@ -1,5 +1,6 @@
 package it.luca.pipeline.step.transform.transformation
 
+import it.luca.pipeline.step.transform.common.SingleSrcTransformation
 import it.luca.pipeline.step.transform.option.DropColumnTransformationOptions
 import org.apache.log4j.Logger
 import org.apache.spark.sql.DataFrame

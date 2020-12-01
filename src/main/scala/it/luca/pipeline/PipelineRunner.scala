@@ -1,7 +1,9 @@
 package it.luca.pipeline
 
-import it.luca.pipeline.data.LogRecord
-import it.luca.pipeline.utils.{JDBCUtils, JsonUtils, SparkUtils}
+import it.luca.pipeline.spark.data.LogRecord
+import it.luca.pipeline.jdbc.JDBCUtils
+import it.luca.pipeline.json.JsonUtils
+import it.luca.pipeline.spark.SparkUtils
 import org.apache.commons.configuration.PropertiesConfiguration
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}

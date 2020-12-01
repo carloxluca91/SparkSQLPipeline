@@ -1,13 +1,13 @@
 package it.luca.pipeline
 
 import argonaut.DecodeJson
-import it.luca.pipeline.data.LogRecord
 import it.luca.pipeline.exception.EmptyPipelineException
+import it.luca.pipeline.spark.data.LogRecord
+import it.luca.pipeline.spark.SparkUtils
 import it.luca.pipeline.step.common.AbstractStep
-import it.luca.pipeline.step.read.reader.ReadStep
-import it.luca.pipeline.step.transform.transformation.TransformStep
-import it.luca.pipeline.step.write.writer.WriteStep
-import it.luca.pipeline.utils.SparkUtils
+import it.luca.pipeline.step.read.ReadStep
+import it.luca.pipeline.step.transform.TransformStep
+import it.luca.pipeline.step.write.WriteStep
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -18,6 +18,7 @@ case class Pipeline(name: String, description: String, pipelineSteps: Option[Lis
 
   private final val logger = Logger.getLogger(classOf[Pipeline])
   private final val dataframeMap: mutable.Map[String, DataFrame] = mutable.Map.empty[String, DataFrame]
+
   private def updateDataframeMap(dataframeId:String, dataFrame: DataFrame): Unit = {
 
     val inputDfSchema: String = SparkUtils.dataframeSchema(dataFrame)

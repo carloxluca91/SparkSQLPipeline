@@ -1,8 +1,9 @@
 package it.luca.pipeline.step.write.writer
 
+import it.luca.pipeline.jdbc.JDBCUtils
 import it.luca.pipeline.json.JsonField
+import it.luca.pipeline.step.write.common.Writer
 import it.luca.pipeline.step.write.option.WriteJDBCTableOptions
-import it.luca.pipeline.utils.JDBCUtils
 import org.apache.log4j.Logger
 import org.apache.spark.sql.DataFrame
 
