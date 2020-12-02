@@ -3,7 +3,7 @@ package it.luca.pipeline
 import argonaut.DecodeJson
 import it.luca.pipeline.exception.EmptyPipelineException
 import it.luca.pipeline.spark.data.LogRecord
-import it.luca.pipeline.spark.SparkUtils
+import it.luca.pipeline.spark.utils.SparkUtils
 import it.luca.pipeline.step.common.AbstractStep
 import it.luca.pipeline.step.read.ReadStep
 import it.luca.pipeline.step.transform.TransformStep

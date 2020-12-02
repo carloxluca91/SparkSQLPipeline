@@ -10,8 +10,8 @@ object JDBCUtils {
 
   private val logger = Logger.getLogger(getClass)
 
-  final def getJDBCOptionsForSparkWriter(jdbcUrl: String, jdbcDriver: String, jdbcUser: String, jdbcPassword: String,
-                                         jdbcUseSSL: String): Map[String, String] = {
+  final def getSparkWriterJDBCOptions(jdbcUrl: String, jdbcDriver: String, jdbcUser: String, jdbcPassword: String,
+                                      jdbcUseSSL: String): Map[String, String] = {
 
     Map("url" -> jdbcUrl,
       "driver" -> jdbcDriver,

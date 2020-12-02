@@ -1,5 +1,5 @@
 package it.luca.pipeline.spark.etl.common
-import it.luca.pipeline.spark.etl.parsing.EtlExpression
+import it.luca.pipeline.spark.etl.catalog.EtlExpression
 import org.apache.spark.sql.Column
 
 abstract class SingleColumnExpression(override val expression: String,

@@ -1,7 +1,6 @@
 package it.luca.pipeline.spark.etl.catalog
 
 import it.luca.pipeline.spark.etl.common.SingleColumnExpression
-import it.luca.pipeline.spark.etl.parsing.EtlExpression
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions.{to_date, to_timestamp}
 

@@ -32,12 +32,6 @@ object LogRecord {
             sparkContext: SparkContext,
             exceptionOpt: Option[Throwable]): LogRecord = {
 
-    val applicationId: String = sparkContext.applicationId
-    val applicationName: String = sparkContext.appName
-    val applicationStartTime = Timestamp.from(Instant.ofEpochMilli(sparkContext.startTime))
-    val applicationStartDate = new Date(sparkContext.startTime)
-    val stepFinishTime = new Timestamp(System.currentTimeMillis())
-    val stepFinishDate = new Date(System.currentTimeMillis())
     val exceptionMsgOpt: Option[String] = exceptionOpt match {
       case None => None
       case Some(e) =>
@@ -51,21 +45,21 @@ object LogRecord {
         Some(exceptionMsg)
     }
 
-    LogRecord(applicationId,
-      applicationName,
-      applicationStartTime,
-      applicationStartDate,
-      pipelineName,
-      pipelineDescription,
-      stepIndex,
-      abstractStep.name,
-      abstractStep.stepType,
-      abstractStep.description,
-      abstractStep.dataframeId,
-      stepFinishTime,
-      stepFinishDate,
-      if (exceptionOpt.isEmpty) 0 else -1,
-      if (exceptionOpt.isEmpty) "OK" else "KO",
-      exceptionMsgOpt)
+    LogRecord(applicationId = sparkContext.applicationId,
+      applicationName = sparkContext.appName,
+      applicationStartTime = Timestamp.from(Instant.ofEpochMilli(sparkContext.startTime)),
+      applicationStartDate = new Date(sparkContext.startTime),
+      pipelineName = pipelineName,
+      pipelineDescription = pipelineDescription,
+      stepIndex = stepIndex,
+      stepName = abstractStep.name,
+      stepType = abstractStep.stepType,
+      stepDescription = abstractStep.description,
+      dataframeId = abstractStep.dataframeId,
+      stepFinishTime = new Timestamp(System.currentTimeMillis()),
+      stepFinishDate = new Date(System.currentTimeMillis()),
+      stepFinishCode = if (exceptionOpt.isEmpty) 0 else -1,
+      stepFinishStatus = if (exceptionOpt.isEmpty) "OK" else "KO",
+      exceptionMessage = exceptionMsgOpt)
   }
 }

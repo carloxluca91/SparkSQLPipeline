@@ -1,4 +1,4 @@
-package it.luca.pipeline.spark
+package it.luca.pipeline.spark.utils
 
 import it.luca.pipeline.json.{JsonUtils, JsonValue}
 import it.luca.pipeline.step.read.option.CsvDataframeSchema

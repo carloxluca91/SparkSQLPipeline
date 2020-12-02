@@ -3,7 +3,7 @@ package it.luca.pipeline
 import it.luca.pipeline.spark.data.LogRecord
 import it.luca.pipeline.jdbc.JDBCUtils
 import it.luca.pipeline.json.JsonUtils
-import it.luca.pipeline.spark.SparkUtils
+import it.luca.pipeline.spark.utils.SparkUtils
 import org.apache.commons.configuration.PropertiesConfiguration
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
@@ -67,6 +67,13 @@ object PipelineRunner {
     import sparkSession.implicits._
 
     val logRecordDf: DataFrame = logRecords.toDF
+    val regex: scala.util.matching.Regex = "([A-Z])".r
+    val logRecordDfWithTableColumnNameConvention: DataFrame = logRecordDf.columns
+      .foldLeft(logRecordDf)((df, columnName) => {
+
+        val newColumnName: String = regex.replaceAllIn(columnName, m => s"_${m.group(1).toLowerCase}")
+        df.withColumnRenamed(columnName, newColumnName)
+      })
 
     logger.info(s"Successfully turned list of ${logRecords.size} object(s) " +
       s"of type ${classOf[LogRecord].getSimpleName} " +
@@ -86,9 +93,9 @@ object PipelineRunner {
 
     // Setup DataFrameWriter JDBC options
     val logTableFullName = jobProperties.getString("jdbc.table.logging.table.fullName")
-    val sparkWriterJDBCOptions: Map[String, String] = JDBCUtils.getJDBCOptionsForSparkWriter(jdbcUrl, jdbcDriver, jdbcUserName, jdbcPassWord, jdbcUseSSL)
+    val sparkWriterJDBCOptions: Map[String, String] = JDBCUtils.getSparkWriterJDBCOptions(jdbcUrl, jdbcDriver, jdbcUserName, jdbcPassWord, jdbcUseSSL)
     logger.info(s"Logging dataframe schema: ${SparkUtils.dataframeSchema(logRecordDf)}")
-    logRecordDf.coalesce(1)
+    logRecordDfWithTableColumnNameConvention.coalesce(1)
       .write
       .format("jdbc")
       .options(sparkWriterJDBCOptions)

@@ -1,6 +1,7 @@
 package it.luca.pipeline.spark.etl.common
 
-import it.luca.pipeline.spark.etl.parsing.EtlExpression
+import it.luca.pipeline.spark.etl.catalog.EtlExpression
+
 import scala.util.matching.Regex.Match
 
 abstract class AbstractExpression(val expression: String,

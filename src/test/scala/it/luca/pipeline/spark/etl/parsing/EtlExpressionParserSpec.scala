@@ -1,6 +1,6 @@
 package it.luca.pipeline.spark.etl.parsing
 
-import it.luca.pipeline.spark.etl.catalog.{Col, CurrentDateOrTimestamp, Lit, ToDateOrTimestamp}
+import it.luca.pipeline.spark.etl.catalog.{Col, CurrentDateOrTimestamp, IsEqualOrIsNotEqual, Lit, ToDateOrTimestamp}
 import it.luca.pipeline.test.AbstractSpec
 import org.apache.spark.sql.{Column, functions}
 
@@ -57,6 +57,23 @@ class EtlExpressionParserSpec extends AbstractSpec {
         val (functionSuffix, expectedFunction): (String, (Column, String) => Column) = t
         val toDateOrTimestamp = EtlExpressionParser.parse(s"to_$functionSuffix(col('c1'), '$format')")
         assert(toDateOrTimestamp == expectedFunction(inputColumn, format))
+    }
+  }
+
+  it should
+    s"correctly parse ${className[IsEqualOrIsNotEqual]} expression" in {
+
+    val inputColumnName = "c1"
+    val (colC1, lit1) = (s"col('$inputColumnName')", "lit(1)")
+    val testSeq: Seq[(String, Column)] =
+      ("isEqual", functions.col(inputColumnName) === 1) ::
+        ("isNotEqual", functions.col(inputColumnName) =!= 1) :: Nil
+
+    testSeq foreach {
+      t =>
+        val (functionName, expectedColumn) = t
+        val parsedColumn = EtlExpressionParser.parse(s"$functionName($colC1, $lit1)")
+        assert(parsedColumn == expectedColumn)
     }
   }
 }

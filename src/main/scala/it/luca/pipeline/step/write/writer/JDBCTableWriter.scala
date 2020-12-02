@@ -33,7 +33,7 @@ object JDBCTableWriter extends Writer[WriteJDBCTableOptions] {
       }
     }
 
-    val sparkWriterJDBCOptions: Map[String, String] = JDBCUtils.getJDBCOptionsForSparkWriter(jdbcUrl, jdbcDriver, jdbcUser, jdbcPassword, jdbcUseSSL)
+    val sparkWriterJDBCOptions: Map[String, String] = JDBCUtils.getSparkWriterJDBCOptions(jdbcUrl, jdbcDriver, jdbcUser, jdbcPassword, jdbcUseSSL)
     logger.info(s"Starting to save data into JDBC table '$dbName.$tableName' using saveMode ${writeOptions.saveMode}")
 
     dataFrameWriter(dataFrame, writeOptions)

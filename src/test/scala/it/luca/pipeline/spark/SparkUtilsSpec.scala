@@ -2,6 +2,7 @@ package it.luca.pipeline.spark
 
 import argonaut.EncodeJson
 import it.luca.pipeline.json.JsonValue
+import it.luca.pipeline.spark.utils.SparkUtils
 import it.luca.pipeline.step.read.option.{CsvColumnSpecification, CsvDataframeSchema}
 import it.luca.pipeline.test.AbstractJsonSpec
 import org.apache.spark.sql.types.{DataTypes, StructField, StructType}
