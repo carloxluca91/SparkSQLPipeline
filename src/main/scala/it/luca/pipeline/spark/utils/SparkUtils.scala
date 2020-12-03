@@ -8,8 +8,8 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 
 object SparkUtils {
 
-  private final val logger = Logger.getLogger(getClass)
-  private final val sparkDataTypeMap: Map[String, DataType] = Map(
+  private val logger = Logger.getLogger(getClass)
+  private val sparkDataTypeMap: Map[String, DataType] = Map(
 
     JsonValue.StringType.value -> DataTypes.StringType,
     JsonValue.IntType.value -> DataTypes.IntegerType,

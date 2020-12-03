@@ -16,8 +16,8 @@ import scala.util.{Failure, Success, Try}
 
 case class Pipeline(name: String, description: String, pipelineSteps: Option[List[AbstractStep]]) {
 
-  private final val logger = Logger.getLogger(classOf[Pipeline])
-  private final val dataframeMap: mutable.Map[String, DataFrame] = mutable.Map.empty[String, DataFrame]
+  private val logger = Logger.getLogger(classOf[Pipeline])
+  private val dataframeMap: mutable.Map[String, DataFrame] = mutable.Map.empty[String, DataFrame]
 
   private def updateDataframeMap(dataframeId:String, dataFrame: DataFrame): Unit = {
 
