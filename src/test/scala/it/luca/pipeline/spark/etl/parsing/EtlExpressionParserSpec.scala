@@ -1,6 +1,6 @@
 package it.luca.pipeline.spark.etl.parsing
 
-import it.luca.pipeline.spark.etl.catalog.{Col, CurrentDateOrTimestamp, IsEqualOrIsNotEqual, Lit, ToDateOrTimestamp}
+import it.luca.pipeline.spark.etl.catalog._
 import it.luca.pipeline.test.AbstractSpec
 import org.apache.spark.sql.{Column, functions}
 
@@ -33,11 +33,11 @@ class EtlExpressionParserSpec extends AbstractSpec {
   it should
     s"correctly parse ${className[CurrentDateOrTimestamp]} expression" in {
 
-    ("date" -> functions.current_date) ::
-      ("timestamp" -> functions.current_timestamp) :: Nil foreach {
+    ("Date" -> functions.current_date) ::
+      ("Timestamp" -> functions.current_timestamp) :: Nil foreach {
       t =>
         val (functionSuffix, expectedColumn): (String, Column) = t
-        val currentDateOrTimestamp = EtlExpressionParser.parse(s"current_$functionSuffix()")
+        val currentDateOrTimestamp = EtlExpressionParser.parse(s"current$functionSuffix()")
         assert(currentDateOrTimestamp == expectedColumn)
     }
   }
@@ -49,31 +49,55 @@ class EtlExpressionParserSpec extends AbstractSpec {
     val format = "yyyy-MM-dd"
 
     val testSeq: Seq[(String, (Column, String) => Column)] = Seq(
-      "date" -> functions.to_date,
-      "timestamp" -> functions.to_timestamp)
+      "Date" -> functions.to_date,
+      "Timestamp" -> functions.to_timestamp)
 
     testSeq foreach {
       t =>
         val (functionSuffix, expectedFunction): (String, (Column, String) => Column) = t
-        val toDateOrTimestamp = EtlExpressionParser.parse(s"to_$functionSuffix(col('c1'), '$format')")
+        val toDateOrTimestamp = EtlExpressionParser.parse(s"to$functionSuffix(col('c1'), '$format')")
         assert(toDateOrTimestamp == expectedFunction(inputColumn, format))
     }
   }
 
   it should
-    s"correctly parse ${className[IsEqualOrIsNotEqual]} expression" in {
+    s"correctly parse ${className[Compare]} expression" in {
 
     val inputColumnName = "c1"
-    val (colC1, lit1) = (s"col('$inputColumnName')", "lit(1)")
+    val (colC1Str, lit1Str) = (s"col('$inputColumnName')", "lit(1)")
+    val colC1: Column = functions.col(inputColumnName)
     val testSeq: Seq[(String, Column)] =
-      ("isEqual", functions.col(inputColumnName) === 1) ::
-        ("isNotEqual", functions.col(inputColumnName) =!= 1) :: Nil
+      ("equal", colC1 === 1) ::
+        ("notEqual", colC1 =!= 1) ::
+        ("greater", colC1 > 1) ::
+        ("greaterOrEqual", colC1 >= 1) ::
+        ("less", colC1 < 1) ::
+        ("lessOrEqual", colC1 <= 1) :: Nil
 
     testSeq foreach {
       t =>
         val (functionName, expectedColumn) = t
-        val parsedColumn = EtlExpressionParser.parse(s"$functionName($colC1, $lit1)")
+        val parsedColumn = EtlExpressionParser.parse(s"$functionName($colC1Str, $lit1Str)")
         assert(parsedColumn == expectedColumn)
     }
+  }
+
+  it should
+    s"correctly parse ${className[Concat]} expression" in {
+
+    val (c1ColName, c2ColName) = ("c1", "c2")
+    val expectedColumn: Column = functions.concat(functions.col(c1ColName), functions.col(c2ColName))
+    val actualColumn: Column = EtlExpressionParser.parse(s"concat(col('$c1ColName'), col('$c2ColName'))")
+    assert(actualColumn == expectedColumn)
+  }
+
+  it should
+    s"correctly parse ${className[ConcatWs]} expression" in {
+
+    val (c1ColName, c2ColName) = ("c1", "c2")
+    val separator = "-"
+    val expectedColumn: Column = functions.concat_ws(separator, functions.col(c1ColName), functions.col(c2ColName))
+    val actualColumn: Column = EtlExpressionParser.parse(s"concatWs('$separator', col('$c1ColName'), col('$c2ColName'))")
+    assert(actualColumn == expectedColumn)
   }
 }

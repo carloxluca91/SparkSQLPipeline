@@ -15,7 +15,7 @@ abstract class AbstractExpression(val expression: String,
 
   final val functionName: String = group(1)
 
-  def asString: String
+  protected def asString: String
 
   override def toString: String = asString
 

@@ -1,7 +1,7 @@
 package it.luca.pipeline.spark.etl.parsing
 
 import it.luca.pipeline.exception.{UndefinedCatalogExpression, UnmatchedEtlExpressionException}
-import it.luca.pipeline.spark.etl.catalog.{Col, CurrentDateOrTimestamp, EtlExpression, IsEqualOrIsNotEqual, Lit, ToDateOrTimestamp}
+import it.luca.pipeline.spark.etl.catalog._
 import it.luca.pipeline.spark.etl.common._
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{Column, DataFrame}
@@ -24,8 +24,10 @@ object EtlExpressionParser {
       val matchingExpression = matchingEtlExpressions.head
       val abstractExpression: AbstractExpression = matchingExpression match {
         case EtlExpression.Col => Col(etlExpression)
+        case EtlExpression.Compare => Compare(etlExpression)
+        case EtlExpression.Concat => Concat(etlExpression)
+        case EtlExpression.ConcatWs => ConcatWs(etlExpression)
         case EtlExpression.CurrentDateOrTimestamp => CurrentDateOrTimestamp(etlExpression)
-        case EtlExpression.IsEqualOrIsNotEqual => IsEqualOrIsNotEqual(etlExpression)
         case EtlExpression.Lit => Lit(etlExpression)
         case EtlExpression.ToDateOrTimestamp => ToDateOrTimestamp(etlExpression)
         case _ => throw UndefinedCatalogExpression(matchingExpression)
@@ -36,14 +38,14 @@ object EtlExpressionParser {
         case expression: SingleColumnExpression =>
 
           val nestedFunctionExpression: String = expression.nestedFunction
-          logger.info(s"Detected a ${classOf[SingleColumnExpression].getSimpleName} expression <${expression.asString}> " +
+          logger.info(s"Detected a ${classOf[SingleColumnExpression].getSimpleName} expression <${expression.toString}> " +
             s"with following nested function $nestedFunctionExpression. Trying to resolve this latter recursively")
-          expression.getColumn(EtlExpressionParser.parse(nestedFunctionExpression, dataframeOpt))
+          expression.getColumn(parse(nestedFunctionExpression, dataframeOpt))
 
         case staticColumnExpression: StaticColumnExpression =>
 
           // If matched catalog expression is a Col, check whether dataframeOpt is defined or not in order to associate output column to it
-          logger.info(s"Detected a ${classOf[StaticColumnExpression].getSimpleName} expression <${staticColumnExpression.asString}>")
+          logger.info(s"Detected a ${classOf[StaticColumnExpression].getSimpleName} expression <${staticColumnExpression.toString}>")
           staticColumnExpression match {
             case c: Col => if (dataframeOpt.isEmpty) c.getColumn else dataframeOpt.get(c.columnName)
             case _ => staticColumnExpression.getColumn
@@ -51,22 +53,22 @@ object EtlExpressionParser {
 
         case twoColumnExpression: TwoColumnExpression =>
 
-          logger.info(s"Detected a ${classOf[TwoColumnExpression].getSimpleName} expression <${twoColumnExpression.asString}>. " +
+          logger.info(s"Detected a ${classOf[TwoColumnExpression].getSimpleName} expression <${twoColumnExpression.toString}>. " +
             s"Trying to resolve each of the two subexpressions (${twoColumnExpression.firstExpression}, ${twoColumnExpression.secondExpression}) " +
             s"recursively")
 
-          val firstColumn: Column = EtlExpressionParser.parse(twoColumnExpression.firstExpression, dataframeOpt)
-          val secondColumn: Column = EtlExpressionParser.parse(twoColumnExpression.secondExpression, dataframeOpt)
+          val firstColumn: Column = parse(twoColumnExpression.firstExpression, dataframeOpt)
+          val secondColumn: Column = parse(twoColumnExpression.secondExpression, dataframeOpt)
           logger.info(s"Successfully parsed both sub expressions")
           twoColumnExpression.getColumn(firstColumn, secondColumn)
 
         case unboundedColumnExpression: UnboundedColumnExpression =>
 
           val subExpressions: Seq[String] = unboundedColumnExpression.subExpressions
-          logger.info(s"Detected a ${classOf[UnboundedColumnExpression].getSimpleName} expression <${unboundedColumnExpression.asString}> " +
+          logger.info(s"Detected a ${classOf[UnboundedColumnExpression].getSimpleName} expression <${unboundedColumnExpression.toString}> " +
             s"with ${subExpressions.size} subexpressions. Trying to resolve each of these recursively")
           val subExpressionColumns: Seq[Column] = subExpressions
-            .map(EtlExpressionParser.parse(_, dataframeOpt))
+            .map(parse(_, dataframeOpt))
 
           logger.info(s"Successfully parsed all of ${subExpressions.size} subexpressions")
           unboundedColumnExpression.getColumn(subExpressionColumns: _*)

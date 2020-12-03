@@ -9,9 +9,11 @@ object EtlExpression extends Enumeration {
   implicit def valueToETLExpressionVal(x: Value): Val = x.asInstanceOf[Val]
 
   val Col: Val = Val("^(col)\\('(\\w+)'\\)$".r)
-  val CurrentDateOrTimestamp: Val = Val("^(current_date|current_timestamp)\\(\\)$".r)
-  val IsEqualOrIsNotEqual: Val = Val("^(isEqual|isNotEqual)\\((\\w+\\(.+\\)), (\\w+\\(.+\\))\\)$".r)
+  val Compare: Val = Val("^(equal|notEqual|greater|greaterOrEqual|less|lessOrEqual)\\((\\w+\\(.*\\)), (\\w+\\(.*\\))\\)$".r)
+  val Concat: Val = Val("^(concat)\\((.+)\\)$".r)
+  val ConcatWs: Val = Val("^(concatWs)\\('(.+)', (.+)\\)$".r)
+  val CurrentDateOrTimestamp: Val = Val("^(currentDate|currentTimestamp)\\(\\)$".r)
   val Lit: Val = Val("^(lit)\\(('?.+'?)\\)$".r)
-  val ToDateOrTimestamp: Val = Val("^(to_date|to_timestamp)\\((\\w+\\(.*\\)), '(.+)'\\)$".r)
+  val ToDateOrTimestamp: Val = Val("^(toDate|toTimestamp)\\((\\w+\\(.*\\)), '(.+)'\\)$".r)
 
 }

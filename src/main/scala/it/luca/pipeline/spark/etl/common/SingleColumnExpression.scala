@@ -7,7 +7,8 @@ abstract class SingleColumnExpression(override val expression: String,
   extends AbstractExpression(expression, etlExpression) {
 
   final val nestedFunction: String = group(2)
+  protected val transformationFunction: Column => Column
 
-  def getColumn(inputColumn: Column): Column
+  def getColumn(inputColumn: Column): Column =  transformationFunction(inputColumn)
 
 }

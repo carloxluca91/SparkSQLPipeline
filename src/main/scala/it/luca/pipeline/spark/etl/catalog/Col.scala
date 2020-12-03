@@ -11,5 +11,5 @@ case class Col(override val expression: String)
 
   override def getColumn: Column = col(columnName)
 
-  override def asString: String = s"${functionName.toUpperCase}($columnName)"
+  override protected def asString: String = s"$functionName($columnName)"
 }

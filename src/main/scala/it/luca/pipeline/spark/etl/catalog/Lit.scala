@@ -27,5 +27,5 @@ case class Lit(override val expression: String)
     lit(trueLiterValue)
   }
 
-  override def asString: String = s"${functionName.toUpperCase}($litValue)"
+  override protected def asString: String = s"$functionName($litValue)"
 }

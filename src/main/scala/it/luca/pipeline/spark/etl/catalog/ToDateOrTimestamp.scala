@@ -8,12 +8,10 @@ case class ToDateOrTimestamp(override val expression: String)
   extends SingleColumnExpression(expression, EtlExpression.ToDateOrTimestamp) {
 
   private val format: String = group(3)
-
-  override def getColumn(inputColumn: Column): Column = {
-
-    val f: (Column, String) => Column = if (functionName endsWith "date") to_date else to_timestamp
-    f(inputColumn, format)
+  override protected val transformationFunction: Column => Column = {
+    val timeFunction: (Column, String) => Column = if (functionName.toLowerCase endsWith "date") to_date else to_timestamp
+    timeFunction(_, format)
   }
 
-  override def asString: String = s"${functionName.toUpperCase}($nestedFunction, FORMAT = $format)"
+  override protected def asString: String = s"$functionName($nestedFunction, format = '$format')"
 }
