@@ -1,6 +1,6 @@
 package it.luca.pipeline.step.transform.transformation
 
-import it.luca.pipeline.spark.etl.parsing.EtlExpressionParser
+import it.luca.pipeline.spark.etl.parsing.CatalogExpressionParser
 import it.luca.pipeline.step.transform.common.MultipleSrcTransformation
 import it.luca.pipeline.step.transform.option.{JoinSelectColumn, JoinTransformationOptions, SingleJoinCondition}
 import org.apache.log4j.Logger
@@ -29,8 +29,8 @@ object JoinTransformation extends MultipleSrcTransformation[JoinTransformationOp
 
           // Parse both sides of equality condition and combine them according to provided operator
           val (singleJoinCondition, index): (SingleJoinCondition, Int) = tuple2
-          val leftSideExpressionCol: Column = EtlExpressionParser.parse(singleJoinCondition.leftSide, leftDf)
-          val rightSideExpressionCol: Column = EtlExpressionParser.parse(singleJoinCondition.rightSide, rightDf)
+          val leftSideExpressionCol: Column = CatalogExpressionParser.parse(singleJoinCondition.leftSide, leftDf)
+          val rightSideExpressionCol: Column = CatalogExpressionParser.parse(singleJoinCondition.rightSide, rightDf)
           val operator: (Column, Column) => Column = resolveOperator(singleJoinCondition.operator)
 
           logger.info(s"Successfully parsed ${classOf[SingleJoinCondition].getSimpleName} # $index: ${singleJoinCondition.toString}")
@@ -53,7 +53,7 @@ object JoinTransformation extends MultipleSrcTransformation[JoinTransformationOp
             case "right" => (joinTransformationOptions.rightDataframe, rightDf)
           }
 
-          val selectedColumn: Column = EtlExpressionParser.parse(joinSelectColumn.expression, currentSideDf)
+          val selectedColumn: Column = CatalogExpressionParser.parse(joinSelectColumn.expression, currentSideDf)
           val selectedColumnMaybeAliased: Column = joinSelectColumn.alias match {
             case None => selectedColumn
             case Some(x) => selectedColumn.as(x)

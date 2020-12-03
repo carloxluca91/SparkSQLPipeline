@@ -5,7 +5,7 @@ import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions.col
 
 case class Col(override val expression: String)
-  extends StaticColumnExpression(expression, EtlExpression.Col) {
+  extends StaticColumnExpression(expression, Catalog.Col) {
 
   val columnName: String = group(2)
 

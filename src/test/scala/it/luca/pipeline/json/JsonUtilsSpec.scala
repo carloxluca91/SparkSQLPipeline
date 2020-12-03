@@ -1,6 +1,6 @@
 package it.luca.pipeline.json
 
-import argonaut.{DecodeJson, EncodeJson}
+import argonaut._
 import it.luca.pipeline.exception.UnexistingPropertyException
 import it.luca.pipeline.test.AbstractJsonSpec
 import org.apache.commons.configuration.PropertiesConfiguration
@@ -16,10 +16,32 @@ class JsonUtilsSpec extends AbstractJsonSpec {
   private val jsonFileSpec2 = "jsonUtilsSpec2.json"
   override protected val testJsonFilesToDelete: Seq[String] = jsonFileSpec1 :: jsonFileSpec2 :: Nil
 
-  // Case class for testing purposes
+  // Case classes for testing purposes
   private case class TestClass(jdbcUrl: String, jdbcDriver: String)
   private implicit val encodeJson: EncodeJson[TestClass] = EncodeJson.derive[TestClass]
   private implicit val decodeJson: DecodeJson[TestClass] = DecodeJson.derive[TestClass]
+
+  private abstract class ABC(val classType: String)
+  private object ABC extends DecodeJsonSubTypes[ABC] {
+
+    implicit def decodeJson: DecodeJson[ABC] = decodeSubTypes("classType",
+      "a" -> ClassA.decodeJson,
+      "b" -> ClassB.decodeJson)
+  }
+
+  private case class ClassA(override val classType: String, a: Option[String]) extends ABC(classType)
+  private object ClassA {
+
+    implicit def decodeJson: DecodeJson[ClassA] = DecodeJson.derive[ClassA]
+    implicit def encodeJson: EncodeJson[ClassA] = EncodeJson.derive[ClassA]
+  }
+
+  private case class ClassB(override val classType: String, b: Int) extends ABC(classType)
+  private object ClassB {
+
+    implicit def decodeJson: DecodeJson[ClassB] = DecodeJson.derive[ClassB]
+    implicit def encodeJson: EncodeJson[ClassB] = EncodeJson.derive[ClassB]
+  }
 
   "A JsonUtils object" should
     s"correctly interpolate a .json string against a ${className[PropertiesConfiguration]} object " +
@@ -58,5 +80,19 @@ class JsonUtilsSpec extends AbstractJsonSpec {
     assert(tryToDecodeAs.isFailure)
     val exception = tryToDecodeAs.failed.get
     assert(exception.isInstanceOf[UnexistingPropertyException])
+  }
+
+  it should
+    s"correctly parse an abstract class from its subclasses" in {
+
+    val classAJsonString: String = toJsonString(ClassA("a", Some("a")))
+    val classBJsonString: String = toJsonString(ClassB("b", 1))
+    val first = JsonUtils.decodeJsonString[ABC](classAJsonString)
+    assert(first.isInstanceOf[ClassA])
+    val firstAsClassA = first.asInstanceOf[ClassA]
+    assert(firstAsClassA.a.nonEmpty)
+
+    val second = JsonUtils.decodeJsonString[ABC](classBJsonString)
+    assert(second.isInstanceOf[ClassB])
   }
 }

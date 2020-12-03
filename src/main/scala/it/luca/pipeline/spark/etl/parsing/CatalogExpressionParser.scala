@@ -6,30 +6,31 @@ import it.luca.pipeline.spark.etl.common._
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{Column, DataFrame}
 
-object EtlExpressionParser {
+object CatalogExpressionParser {
 
   private val logger = Logger.getLogger(getClass)
 
   @throws[UndefinedCatalogExpression]
   @throws[UnmatchedEtlExpressionException]
-  private def parse(etlExpression: String, dataframeOpt: Option[DataFrame]): Column = {
+  private def parse(catalogExpression: String, dataframeOpt: Option[DataFrame]): Column = {
 
     // Detect the matching expressions (hopefully only one)
-    val matchingEtlExpressions: EtlExpression.ValueSet = EtlExpression.values
-      .filter(v => v.regex.findFirstMatchIn(etlExpression).nonEmpty)
+    val matchingEtlExpressions: Catalog.ValueSet = Catalog.values
+      .filter(v => v.regex.findFirstMatchIn(catalogExpression).nonEmpty)
 
     // If any, match it to its catalog counterpart
     if (matchingEtlExpressions.nonEmpty) {
 
       val matchingExpression = matchingEtlExpressions.head
       val abstractExpression: AbstractExpression = matchingExpression match {
-        case EtlExpression.Col => Col(etlExpression)
-        case EtlExpression.Compare => Compare(etlExpression)
-        case EtlExpression.Concat => Concat(etlExpression)
-        case EtlExpression.ConcatWs => ConcatWs(etlExpression)
-        case EtlExpression.CurrentDateOrTimestamp => CurrentDateOrTimestamp(etlExpression)
-        case EtlExpression.Lit => Lit(etlExpression)
-        case EtlExpression.ToDateOrTimestamp => ToDateOrTimestamp(etlExpression)
+        case Catalog.Col => Col(catalogExpression)
+        case Catalog.Compare => Compare(catalogExpression)
+        case Catalog.Concat => Concat(catalogExpression)
+        case Catalog.ConcatWs => ConcatWs(catalogExpression)
+        case Catalog.CurrentDateOrTimestamp => CurrentDateOrTimestamp(catalogExpression)
+        case Catalog.IsNullOrIsNotNull => IsNullOrIsNotNull(catalogExpression)
+        case Catalog.Lit => Lit(catalogExpression)
+        case Catalog.ToDateOrTimestamp => ToDateOrTimestamp(catalogExpression)
         case _ => throw UndefinedCatalogExpression(matchingExpression)
       }
 
@@ -54,7 +55,7 @@ object EtlExpressionParser {
         case twoColumnExpression: TwoColumnExpression =>
 
           logger.info(s"Detected a ${classOf[TwoColumnExpression].getSimpleName} expression <${twoColumnExpression.toString}>. " +
-            s"Trying to resolve each of the two subexpressions (${twoColumnExpression.firstExpression}, ${twoColumnExpression.secondExpression}) " +
+            s"Trying to resolve each of the two subexpressions <${twoColumnExpression.firstExpression}>, <${twoColumnExpression.secondExpression}> " +
             s"recursively")
 
           val firstColumn: Column = parse(twoColumnExpression.firstExpression, dataframeOpt)
@@ -73,10 +74,10 @@ object EtlExpressionParser {
           logger.info(s"Successfully parsed all of ${subExpressions.size} subexpressions")
           unboundedColumnExpression.getColumn(subExpressionColumns: _*)
       }
-    } else throw UnmatchedEtlExpressionException(etlExpression)
+    } else throw UnmatchedEtlExpressionException(catalogExpression)
   }
 
-  final def parse(etlExpression: String, dataFrame: DataFrame): Column = parse(etlExpression, Some(dataFrame))
+  final def parse(catalogExpression: String, dataFrame: DataFrame): Column = parse(catalogExpression, Some(dataFrame))
 
-  final def parse(etlExpression: String): Column = parse(etlExpression, None)
+  final def parse(catalogExpression: String): Column = parse(catalogExpression, None)
 }

@@ -4,7 +4,7 @@ import it.luca.pipeline.spark.etl.common.TwoColumnExpression
 import org.apache.spark.sql.Column
 
 case class Compare(override val expression: String)
-  extends TwoColumnExpression(expression, EtlExpression.Compare) {
+  extends TwoColumnExpression(expression, Catalog.Compare) {
 
   override protected val combiningFunction: (Column, Column) => Column = {
 

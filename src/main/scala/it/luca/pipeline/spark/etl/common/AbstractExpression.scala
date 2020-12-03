@@ -1,13 +1,13 @@
 package it.luca.pipeline.spark.etl.common
 
-import it.luca.pipeline.spark.etl.catalog.EtlExpression
+import it.luca.pipeline.spark.etl.catalog.Catalog
 
 import scala.util.matching.Regex.Match
 
 abstract class AbstractExpression(val expression: String,
-                                  val etlExpression: EtlExpression.Value) {
+                                  val catalogExpression: Catalog.Value) {
 
-  private final val regexMatch: Match = etlExpression.regex
+  private final val regexMatch: Match = catalogExpression.regex
     .findFirstMatchIn(expression)
     .get
 

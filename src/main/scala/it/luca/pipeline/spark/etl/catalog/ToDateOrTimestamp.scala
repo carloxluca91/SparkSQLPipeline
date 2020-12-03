@@ -5,7 +5,7 @@ import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions.{to_date, to_timestamp}
 
 case class ToDateOrTimestamp(override val expression: String)
-  extends SingleColumnExpression(expression, EtlExpression.ToDateOrTimestamp) {
+  extends SingleColumnExpression(expression, Catalog.ToDateOrTimestamp) {
 
   private val format: String = group(3)
   override protected val transformationFunction: Column => Column = {
