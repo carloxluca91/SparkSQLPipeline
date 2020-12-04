@@ -6,6 +6,8 @@ import org.apache.spark.sql.Column
 case class Compare(override val expression: String)
   extends TwoColumnExpression(expression, Catalog.Compare) {
 
+  override protected def asString: String = s"$firstExpression.$functionName($secondExpression)"
+
   override protected val combiningFunction: (Column, Column) => Column = {
 
     // Resolve comparing operator depending on function name

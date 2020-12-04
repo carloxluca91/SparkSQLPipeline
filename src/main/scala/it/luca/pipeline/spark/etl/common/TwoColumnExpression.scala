@@ -11,7 +11,5 @@ abstract class TwoColumnExpression(override val expression: String,
 
   protected val combiningFunction: (Column, Column) => Column
 
-  override protected def asString: String = s"$firstExpression.$functionName($secondExpression)"
-
   def getColumn(firstColumn: Column, secondColumn: Column): Column = combiningFunction(firstColumn, secondColumn)
 }

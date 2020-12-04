@@ -6,12 +6,10 @@ import it.luca.pipeline.spark.etl.common._
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{Column, DataFrame}
 
-object CatalogExpressionParser {
+object CatalogParser {
 
   private val logger = Logger.getLogger(getClass)
 
-  @throws[UndefinedCatalogExpression]
-  @throws[UnmatchedEtlExpressionException]
   private def parse(catalogExpression: String, dataframeOpt: Option[DataFrame]): Column = {
 
     // Detect the matching expressions (hopefully only one)
@@ -23,6 +21,9 @@ object CatalogExpressionParser {
 
       val matchingExpression = matchingEtlExpressions.head
       val abstractExpression: AbstractExpression = matchingExpression match {
+        case Catalog.Alias => Alias(catalogExpression)
+        case Catalog.Case => Case(catalogExpression)
+        case Catalog.Cast => Cast(catalogExpression)
         case Catalog.Col => Col(catalogExpression)
         case Catalog.Compare => Compare(catalogExpression)
         case Catalog.Concat => Concat(catalogExpression)
@@ -31,6 +32,7 @@ object CatalogExpressionParser {
         case Catalog.IsNullOrIsNotNull => IsNullOrIsNotNull(catalogExpression)
         case Catalog.Lit => Lit(catalogExpression)
         case Catalog.ToDateOrTimestamp => ToDateOrTimestamp(catalogExpression)
+        case Catalog.When => When(catalogExpression)
         case _ => throw UndefinedCatalogExpression(matchingExpression)
       }
 
@@ -40,7 +42,7 @@ object CatalogExpressionParser {
 
           val nestedFunctionExpression: String = expression.nestedFunction
           logger.info(s"Detected a ${classOf[SingleColumnExpression].getSimpleName} expression <${expression.toString}> " +
-            s"with following nested function $nestedFunctionExpression. Trying to resolve this latter recursively")
+            s"with following nested function <$nestedFunctionExpression>. Trying to resolve this latter recursively")
           expression.getColumn(parse(nestedFunctionExpression, dataframeOpt))
 
         case staticColumnExpression: StaticColumnExpression =>
@@ -55,7 +57,7 @@ object CatalogExpressionParser {
         case twoColumnExpression: TwoColumnExpression =>
 
           logger.info(s"Detected a ${classOf[TwoColumnExpression].getSimpleName} expression <${twoColumnExpression.toString}>. " +
-            s"Trying to resolve each of the two subexpressions <${twoColumnExpression.firstExpression}>, <${twoColumnExpression.secondExpression}> " +
+            s"Trying to resolve each of the two subexpressions <${twoColumnExpression.firstExpression}, ${twoColumnExpression.secondExpression}> " +
             s"recursively")
 
           val firstColumn: Column = parse(twoColumnExpression.firstExpression, dataframeOpt)

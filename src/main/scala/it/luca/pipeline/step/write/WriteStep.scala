@@ -21,9 +21,9 @@ case class WriteStep(override val name: String,
 
     writeOptions match {
       case _: WriteFileOptions =>
-      case options: WriteTableOptions => options match {
-        case hiveTableOptions: WriteHiveTableOptions => HiveTableWriter.write(dataFrame, hiveTableOptions)
-        case jdbcTableOptions: WriteJDBCTableOptions => JDBCTableWriter.write(dataFrame, jdbcTableOptions)
+      case tableOptions: WriteTableOptions => tableOptions match {
+        case wht: WriteHiveTableOptions => HiveTableWriter.write(dataFrame, wht)
+        case wjt: WriteJDBCTableOptions => JDBCTableWriter.write(dataFrame, wjt)
       }
     }
 

@@ -16,7 +16,7 @@ class SparkUtilsSpec extends AbstractJsonSpec {
     s"return default datatype (${DataTypes.StringType}) " +
     s"when a datatype is undefined" in {
 
-    assert(SparkUtils.asSparkDataType(UndefinedType) == DataTypes.StringType)
+    assert(SparkUtils.dataType(UndefinedType) == DataTypes.StringType)
   }
 
   it should
@@ -51,7 +51,7 @@ class SparkUtilsSpec extends AbstractJsonSpec {
       val (actual, expected): (StructField, CsvColumnSpecification) = t
       assert(actual.name == expected.name)
       assert(actual.nullable == expected.nullable)
-      assert(actual.dataType == SparkUtils.asSparkDataType(expected.dataType))
+      assert(actual.dataType == SparkUtils.dataType(expected.dataType))
     }
   }
 }

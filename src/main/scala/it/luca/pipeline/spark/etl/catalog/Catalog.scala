@@ -8,6 +8,9 @@ object Catalog extends Enumeration {
 
   implicit def valueToETLExpressionVal(x: Value): Val = x.asInstanceOf[Val]
 
+  val Alias: Val = Val("^(alias)\\((\\w+\\(.*\\)), '(\\w+)'\\)$".r)
+  val Case: Val = Val("^(case)\\((.+\\))\\)\\.otherWise\\((\\w+\\(.*\\))\\)$".r)
+  val Cast: Val = Val("^(cast)\\((\\w+\\(.*\\)), '(\\w+)'\\)$".r)
   val Col: Val = Val("^(col)\\('(\\w+)'\\)$".r)
   val Compare: Val = Val("^(equal|notEqual|greater|greaterOrEqual|less|lessOrEqual)\\((\\w+\\(.*\\)), (\\w+\\(.*\\))\\)$".r)
   val Concat: Val = Val("^(concat)\\((.+\\))\\)$".r)
@@ -16,5 +19,6 @@ object Catalog extends Enumeration {
   val IsNullOrIsNotNull: Val = Val("^(isNull|isNotNull)\\((\\w+\\(.*\\))\\)$".r)
   val Lit: Val = Val("^(lit)\\(('?.+'?)\\)$".r)
   val ToDateOrTimestamp: Val = Val("^(toDate|toTimestamp)\\((\\w+\\(.*\\)), '(.+)'\\)$".r)
+  val When: Val = Val("^(when)\\((\\w+\\(.*\\)), (\\w+\\(.*\\))\\)$".r)
 
 }

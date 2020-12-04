@@ -17,7 +17,7 @@ object SparkUtils {
     JsonValue.TimestampType.value -> DataTypes.TimestampType
   )
 
-  final def asSparkDataType(dataType: String): DataType = {
+  final def dataType(dataType: String): DataType = {
 
     if (!sparkDataTypeMap.contains(dataType)) {
       logger.warn(s"Datatype '$dataType' not defined. Returning default datatype (${DataTypes.StringType})")
@@ -34,7 +34,7 @@ object SparkUtils {
     logger.info(s"Processing metadata for each of the ${csvDataframeSchema.columns.size} column(s)")
     val csvStructFields: Seq[StructField] = csvDataframeSchema
       .columns
-      .map(c => StructField(c.name, asSparkDataType(c.dataType), c.nullable))
+      .map(c => StructField(c.name, dataType(c.dataType), c.nullable))
 
     logger.info(s"Successfully processed metadata for each of the ${csvDataframeSchema.columns.size} column(s)")
     StructType(csvStructFields)
