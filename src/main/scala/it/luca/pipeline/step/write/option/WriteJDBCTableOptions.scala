@@ -1,7 +1,7 @@
 package it.luca.pipeline.step.write.option
 
 import argonaut.DecodeJson
-import it.luca.pipeline.jdbc.JDBCOptions
+import it.luca.pipeline.step.common.JDBCOptions
 import it.luca.pipeline.step.write.common.WriteTableOptions
 
 case class WriteJDBCTableOptions(override val destinationType: String,

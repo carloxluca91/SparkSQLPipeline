@@ -2,6 +2,7 @@ val argonautVersion = "6.2.2"
 val sparkVersion = "2.2.3"
 val scoptVersion = "3.5.0"
 val scalaTestVersion = "3.2.0"
+val sparkSQLibraryVersion = "0.0.3"
 
 lazy val pipelineRunnerScala = (project in file("."))
   .settings(
@@ -25,7 +26,8 @@ lazy val pipelineRunnerScala = (project in file("."))
       "org.apache.spark" %% "spark-sql" % sparkVersion % "provided",
       "com.github.scopt" %% "scopt" % scoptVersion,
       "org.scalactic" %% "scalactic" % scalaTestVersion,
-      "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
+      "org.scalatest" %% "scalatest" % scalaTestVersion % "test",
+      "it.luca.spark" %% "sparkSQL" % sparkSQLibraryVersion
     ),
 
     assemblyJarName in assembly := s"${name.value}_${version.value}.jar",

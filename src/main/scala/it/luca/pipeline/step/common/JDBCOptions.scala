@@ -1,4 +1,4 @@
-package it.luca.pipeline.jdbc
+package it.luca.pipeline.step.common
 
 import argonaut.DecodeJson
 

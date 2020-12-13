@@ -1,8 +1,8 @@
 package it.luca.pipeline.step.transform.transformation
 
-import it.luca.pipeline.spark.etl.parsing.CatalogParser
 import it.luca.pipeline.step.transform.common.MultipleSrcTransformation
 import it.luca.pipeline.step.transform.option.{JoinSelectColumn, JoinTransformationOptions, SingleJoinCondition}
+import it.luca.spark.sql.catalog.parser.SQLFunctionParser
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{Column, DataFrame}
 
@@ -29,8 +29,8 @@ object JoinTransformation extends MultipleSrcTransformation[JoinTransformationOp
 
           // Parse both sides of equality condition and combine them according to provided operator
           val (singleJoinCondition, index): (SingleJoinCondition, Int) = tuple2
-          val leftSideExpressionCol: Column = CatalogParser.parse(singleJoinCondition.leftSide, leftDf)
-          val rightSideExpressionCol: Column = CatalogParser.parse(singleJoinCondition.rightSide, rightDf)
+          val leftSideExpressionCol: Column = SQLFunctionParser.parse(singleJoinCondition.leftSide, leftDf)
+          val rightSideExpressionCol: Column = SQLFunctionParser.parse(singleJoinCondition.rightSide, rightDf)
           val operator: (Column, Column) => Column = resolveOperator(singleJoinCondition.operator)
 
           logger.info(s"Successfully parsed ${classOf[SingleJoinCondition].getSimpleName} # $index: ${singleJoinCondition.toString}")
@@ -42,18 +42,19 @@ object JoinTransformation extends MultipleSrcTransformation[JoinTransformationOp
     (joinTransformationOptions, leftDf, rightDf) => {
 
       // Define columns to select from involved dataframes
-      joinTransformationOptions.selectColumns
+      joinTransformationOptions.joinOptions
+        .selectColumns
         .zipWithIndex
         .map(tuple2 => {
 
           // Detect the dataframe to be "linked" to current expression, parse the expression adding an alias if defined
           val (joinSelectColumn, index): (JoinSelectColumn, Int) = tuple2
           val (currentSideDfId, currentSideDf): (String, DataFrame) = joinSelectColumn.side.toLowerCase match {
-            case "left" => (joinTransformationOptions.leftDataframe, leftDf)
-            case "right" => (joinTransformationOptions.rightDataframe, rightDf)
+            case "left" => (joinTransformationOptions.joinOptions.leftDataframe, leftDf)
+            case "right" => (joinTransformationOptions.joinOptions.rightDataframe, rightDf)
           }
 
-          val selectedColumn: Column = CatalogParser.parse(joinSelectColumn.expression, currentSideDf)
+          val selectedColumn: Column = SQLFunctionParser.parse(joinSelectColumn.expression, currentSideDf)
           val selectedColumnMaybeAliased: Column = joinSelectColumn.alias match {
             case None => selectedColumn
             case Some(x) => selectedColumn.as(x)
@@ -67,14 +68,15 @@ object JoinTransformation extends MultipleSrcTransformation[JoinTransformationOp
 
   override def transform(transformationOptions: JoinTransformationOptions, dataframeMap: mutable.Map[String, DataFrame]): DataFrame = {
 
-    val leftDataframe: DataFrame = dataframeMap(transformationOptions.leftDataframe)
-    val rightDataframe: DataFrame = dataframeMap(transformationOptions.rightDataframe)
+    val joinOptions = transformationOptions.joinOptions
+    val leftDataframe: DataFrame = dataframeMap(joinOptions.leftDataframe)
+    val rightDataframe: DataFrame = dataframeMap(joinOptions.rightDataframe)
 
-    val joinCondition: Column = assemblyJoinCondition(transformationOptions.joinCondition, leftDataframe, rightDataframe)
+    val joinCondition: Column = assemblyJoinCondition(joinOptions.joinCondition, leftDataframe, rightDataframe)
     val selectColumns: Seq[Column] = defineSelectColumns(transformationOptions, leftDataframe, rightDataframe)
 
     leftDataframe
-      .join(rightDataframe, joinCondition, transformationOptions.joinType)
+      .join(rightDataframe, joinCondition, joinOptions.joinType)
       .select(selectColumns: _*)
   }
 }

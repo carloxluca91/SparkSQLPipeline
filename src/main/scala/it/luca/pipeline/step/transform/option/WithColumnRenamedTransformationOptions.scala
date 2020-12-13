@@ -12,3 +12,10 @@ object WithColumnRenamedTransformationOptions {
 
   implicit def decodeJson: DecodeJson[WithColumnRenamedTransformationOptions] = DecodeJson.derive[WithColumnRenamedTransformationOptions]
 }
+
+case class WithColumnRenamedOption(oldName: String, newName: String)
+
+object WithColumnRenamedOption {
+
+  implicit def decodeJson: DecodeJson[WithColumnRenamedOption] = DecodeJson.derive[WithColumnRenamedOption]
+}

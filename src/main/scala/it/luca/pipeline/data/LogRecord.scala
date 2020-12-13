@@ -1,4 +1,4 @@
-package it.luca.pipeline.spark.data
+package it.luca.pipeline.data
 
 import java.sql.{Date, Timestamp}
 import java.time.Instant
@@ -12,7 +12,7 @@ case class LogRecord(applicationId: String,
                      applicationStartDate: Date,
                      pipelineName: String,
                      pipelineDescription: String,
-                     stepIndex: Int,
+                     stepProgression: String,
                      stepName: String,
                      stepType: String,
                      stepDescription: String,
@@ -27,7 +27,7 @@ object LogRecord {
 
   def apply(pipelineName: String,
             pipelineDescription: String,
-            stepIndex: Int,
+            stepIndex: String,
             abstractStep: AbstractStep,
             sparkContext: SparkContext,
             exceptionOpt: Option[Throwable]): LogRecord = {
@@ -51,7 +51,7 @@ object LogRecord {
       applicationStartDate = new Date(sparkContext.startTime),
       pipelineName = pipelineName,
       pipelineDescription = pipelineDescription,
-      stepIndex = stepIndex,
+      stepProgression = stepIndex,
       stepName = abstractStep.name,
       stepType = abstractStep.stepType,
       stepDescription = abstractStep.description,

@@ -1,9 +1,9 @@
 package it.luca.pipeline
 
-import it.luca.pipeline.spark.data.LogRecord
+import it.luca.pipeline.data.LogRecord
 import it.luca.pipeline.jdbc.JDBCUtils
 import it.luca.pipeline.json.JsonUtils
-import it.luca.pipeline.spark.utils.SparkUtils
+import it.luca.spark.sql.utils.{DataFrameUtils, SparkSessionUtils}
 import org.apache.commons.configuration.PropertiesConfiguration
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
@@ -94,7 +94,7 @@ object PipelineRunner {
     // Setup DataFrameWriter JDBC options
     val logTableFullName = jobProperties.getString("jdbc.table.logging.table.fullName")
     val sparkWriterJDBCOptions: Map[String, String] = JDBCUtils.getSparkWriterJDBCOptions(jdbcUrl, jdbcDriver, jdbcUserName, jdbcPassWord, jdbcUseSSL)
-    logger.info(s"Logging dataframe schema: ${SparkUtils.dataframeSchema(logRecordDf)}")
+    logger.info(s"Logging dataframe schema: ${DataFrameUtils.dataframeSchema(logRecordDf)}")
     logRecordDfWithTableColumnNameConvention.coalesce(1)
       .write
       .format("jdbc")
@@ -108,7 +108,7 @@ object PipelineRunner {
 
   def run(pipelineName: String, propertiesFile: String): Unit = {
 
-    lazy val sparkSession: SparkSession = SparkUtils.getOrCreateSparkSession
+    lazy val sparkSession: SparkSession = SparkSessionUtils.getOrCreateWithHiveSupport
     val jobProperties = new PropertiesConfiguration(propertiesFile)
     logger.info("Successfully loaded job .properties file")
 

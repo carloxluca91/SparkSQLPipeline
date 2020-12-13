@@ -18,6 +18,7 @@ object JsonValue extends Enumeration {
   val StringType: Val = Val("string")
   val TimestampType: Val = Val("timestamp")
   val TransformStep: Val = Val("transform")
+  val UnionTransformation: Val = Val("union")
   val WithColumnRenamedTransformation: Val = Val("withColumnRenamed")
   val WithColumnTransformation: Val = Val("withColumn")
   val WriteStep: Val = Val("writeStep")

@@ -1,8 +1,8 @@
 package it.luca.pipeline.step.transform.transformation
 
-import it.luca.pipeline.spark.etl.parsing.CatalogParser
 import it.luca.pipeline.step.transform.common.SingleSrcTransformation
 import it.luca.pipeline.step.transform.option.WithColumnTransformationOptions
+import it.luca.spark.sql.catalog.parser.SQLFunctionParser
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{Column, DataFrame}
 
@@ -19,7 +19,7 @@ object WithColumnTransformation extends SingleSrcTransformation[WithColumnTransf
       .map(c => {
 
         val (columnName, etlExpression): (String, String) = (c.alias, c.expression)
-        val sparkSQLColumn: Column = CatalogParser.parse(etlExpression)
+        val sparkSQLColumn: Column = SQLFunctionParser.parse(etlExpression)
         if (dataFrame.columns contains columnName.toLowerCase) {
           logger.warn(s"Column '$columnName' is already defined on dataframe '$dataframeId'. " +
             s"Thus, it will be overridden by this expression: ${sparkSQLColumn.toString()}")

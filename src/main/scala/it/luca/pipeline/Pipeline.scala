@@ -1,13 +1,13 @@
 package it.luca.pipeline
 
 import argonaut.DecodeJson
+import it.luca.pipeline.data.LogRecord
 import it.luca.pipeline.exception.EmptyPipelineException
-import it.luca.pipeline.spark.data.LogRecord
-import it.luca.pipeline.spark.utils.SparkUtils
 import it.luca.pipeline.step.common.AbstractStep
 import it.luca.pipeline.step.read.ReadStep
 import it.luca.pipeline.step.transform.TransformStep
 import it.luca.pipeline.step.write.WriteStep
+import it.luca.spark.sql.utils.DataFrameUtils
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -21,10 +21,10 @@ case class Pipeline(name: String, description: String, pipelineSteps: Option[Lis
 
   private def updateDataframeMap(dataframeId:String, dataFrame: DataFrame): Unit = {
 
-    val inputDfSchema: String = SparkUtils.dataframeSchema(dataFrame)
+    val inputDfSchema: String = DataFrameUtils.dataframeSchema(dataFrame)
     if (dataframeMap contains dataframeId) {
 
-      val oldDfSchema: String = SparkUtils.dataframeSchema(dataframeMap(dataframeId))
+      val oldDfSchema: String = DataFrameUtils.dataframeSchema(dataframeMap(dataframeId))
       logger.warn(s"Dataframe id '$dataframeId' is already defined. Schema: $oldDfSchema")
       logger.warn(s"It will be overwritten by a Dataframe having schema $inputDfSchema")
     } else {
@@ -42,10 +42,14 @@ case class Pipeline(name: String, description: String, pipelineSteps: Option[Lis
 
       // If some steps are defined
       val logRecords: mutable.ListBuffer[LogRecord] = mutable.ListBuffer.empty[LogRecord]
-      for ((abstractStep, stepIndex) <- pipelineSteps.get.zipWithIndex) {
+      val numberOfSteps = pipelineSteps.get.length
+      val pipelineStepsWithOneBasedIndex: Seq[(AbstractStep, Int)] = pipelineSteps.get
+        .zip(1 to numberOfSteps)
+      for ((abstractStep, stepIndex) <- pipelineStepsWithOneBasedIndex) {
 
         // Try to execute them one by one according to matched pattern
         val stepName: String = abstractStep.name
+        val stepProgression = s"$stepIndex/$numberOfSteps"
         logger.info(s"Starting to execute step # $stepIndex ('$stepName')")
         val tryToExecuteStep: Try[Unit] = Try {
           abstractStep match {
@@ -68,14 +72,14 @@ case class Pipeline(name: String, description: String, pipelineSteps: Option[Lis
 
             // If the step triggered an exception, create a new LogRecord reporting what happened and return the ones gathered so far
             logger.error(s"Caught exception while trying to execute step # $stepIndex ('$stepName'). Stack trace: ", e)
-            logRecords.append(LogRecord(name, description, stepIndex, abstractStep, sparkSession.sparkContext, Some(e)))
+            logRecords.append(LogRecord(name, description, stepProgression, abstractStep, sparkSession.sparkContext, Some(e)))
             return (false, logRecords)
 
           case Success(_) =>
 
             // Otherwise, just add this one and continue looping
             logger.info(s"Successfully executed step # $stepIndex ('$stepName')")
-            logRecords.append(LogRecord(name, description, stepIndex, abstractStep, sparkSession.sparkContext, None))
+            logRecords.append(LogRecord(name, description, stepProgression, abstractStep, sparkSession.sparkContext, None))
         }
       }
 

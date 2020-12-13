@@ -2,8 +2,11 @@ package it.luca.pipeline.json
 
 import argonaut._
 import it.luca.pipeline.exception.UnexistingPropertyException
+import it.luca.pipeline.step.read.option.{CsvColumnSpecification, CsvDataframeSchema}
 import it.luca.pipeline.test.AbstractJsonSpec
+import it.luca.spark.sql.utils.DataTypeUtils
 import org.apache.commons.configuration.PropertiesConfiguration
+import org.apache.spark.sql.types.{StructField, StructType}
 
 import scala.util.Try
 
@@ -14,7 +17,8 @@ class JsonUtilsSpec extends AbstractJsonSpec {
 
   private val jsonFileSpec1 = "jsonUtilsSpec1.json"
   private val jsonFileSpec2 = "jsonUtilsSpec2.json"
-  override protected val testJsonFilesToDelete: Seq[String] = jsonFileSpec1 :: jsonFileSpec2 :: Nil
+  private val schemaFile = "jsonUtilsSpecSchema.json"
+  override protected val testJsonFilesToDelete: Seq[String] = jsonFileSpec1 :: jsonFileSpec2 :: schemaFile :: Nil
 
   // Case classes for testing purposes
   private case class TestClass(jdbcUrl: String, jdbcDriver: String)
@@ -62,8 +66,7 @@ class JsonUtilsSpec extends AbstractJsonSpec {
     toJsonString(testClassDecodedInstance)
   }
 
-  it should
-    s"throw a ${className[UnexistingPropertyException]} if one key is not defined" in {
+  it should s"throw a ${className[UnexistingPropertyException]} if one key is not defined" in {
 
     val strangeProperty = "a.strange.property"
     assert(!jobProperties.containsKey(strangeProperty))
@@ -82,8 +85,7 @@ class JsonUtilsSpec extends AbstractJsonSpec {
     assert(exception.isInstanceOf[UnexistingPropertyException])
   }
 
-  it should
-    s"correctly parse an abstract class from its subclasses" in {
+  it should s"correctly parse an abstract class from its subclasses" in {
 
     val classAJsonString: String = toJsonString(ClassA("a", Some("a")))
     val classBJsonString: String = toJsonString(ClassB("b", 1))
@@ -94,5 +96,40 @@ class JsonUtilsSpec extends AbstractJsonSpec {
 
     val second = JsonUtils.decodeJsonString[ABC](classBJsonString)
     assert(second.isInstanceOf[ClassB])
+  }
+
+  it should s"be able to parse a suitable .json string as a ${className[StructType]} object" in {
+
+    // Initialize some column objects
+    val expectedFlag = false
+    val columnSpecificationMap: Map[String, (String, String, Boolean)] = Map(
+      "col1" -> ("first", JsonValue.StringType.value, expectedFlag),
+      "col2" -> ("second", JsonValue.DateType.value, expectedFlag))
+
+    // Initialize a schema defined by such column objects
+    val csvColumnSpecifications: List[CsvColumnSpecification] = columnSpecificationMap
+      .map(t => {
+
+        val (name, (description, dataType, nullable)) = t
+        CsvColumnSpecification(name, description, dataType, nullable)
+      }).toList
+
+    val inputCsvSchema = CsvDataframeSchema("df1", "first dataframe", csvColumnSpecifications)
+
+    // Write on a .json file
+    implicit val encodeJsonColumn: EncodeJson[CsvColumnSpecification] = EncodeJson.derive[CsvColumnSpecification]
+    implicit val encodeJsonSchema: EncodeJson[CsvDataframeSchema] = EncodeJson.derive[CsvDataframeSchema]
+    writeAsJsonFileInTestResources[CsvDataframeSchema](inputCsvSchema, schemaFile)
+
+    // Decode json file and perform assertions
+    val decodedCsvSchema: StructType = JsonUtils.fromSchemaToStructType(asTestResource(schemaFile))
+    assert(decodedCsvSchema.size == csvColumnSpecifications.size)
+    decodedCsvSchema.zip(csvColumnSpecifications) foreach { t =>
+
+      val (actual, expected): (StructField, CsvColumnSpecification) = t
+      assert(actual.name == expected.name)
+      assert(actual.nullable == expected.nullable)
+      assert(actual.dataType == DataTypeUtils.dataType(expected.dataType))
+    }
   }
 }

@@ -1,9 +1,13 @@
 package it.luca.pipeline.json
 
-import argonaut._, Argonaut._
+import argonaut._
+import Argonaut._
 import it.luca.pipeline.exception.{JsonFileParsingException, JsonStringParsingException, UnexistingPropertyException}
+import it.luca.pipeline.step.read.option.CsvDataframeSchema
+import it.luca.spark.sql.utils.DataTypeUtils
 import org.apache.commons.configuration.PropertiesConfiguration
 import org.apache.log4j.Logger
+import org.apache.spark.sql.types.{StructField, StructType}
 
 import scala.io.{BufferedSource, Source}
 import scala.util.matching.Regex
@@ -75,5 +79,17 @@ object JsonUtils {
         logger.info(s"Successfully parsed json string from file $jsonFilePath as an object of type $tClassName")
         value
     }
+  }
+
+  final def fromSchemaToStructType(schemaFilePath: String): StructType = {
+
+    val csvDataframeSchema: CsvDataframeSchema = JsonUtils.decodeJsonFile[CsvDataframeSchema](schemaFilePath)
+    logger.info(s"Processing metadata for each of the ${csvDataframeSchema.columns.size} column(s)")
+    val csvStructFields: Seq[StructField] = csvDataframeSchema
+      .columns
+      .map(c => StructField(c.name, DataTypeUtils.dataType(c.dataType), c.nullable))
+
+    logger.info(s"Successfully processed metadata for each of the ${csvDataframeSchema.columns.size} column(s)")
+    StructType(csvStructFields)
   }
 }

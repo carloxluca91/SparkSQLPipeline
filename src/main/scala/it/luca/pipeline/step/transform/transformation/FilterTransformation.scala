@@ -1,8 +1,8 @@
 package it.luca.pipeline.step.transform.transformation
 
-import it.luca.pipeline.spark.etl.parsing.CatalogParser
 import it.luca.pipeline.step.transform.common.SingleSrcTransformation
 import it.luca.pipeline.step.transform.option.FilterTransformationOptions
+import it.luca.spark.sql.catalog.parser.SQLFunctionParser
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{Column, DataFrame}
 
@@ -13,7 +13,7 @@ object FilterTransformation extends SingleSrcTransformation[FilterTransformation
   override def transform(transformationOptions: FilterTransformationOptions, dataFrame: DataFrame): DataFrame = {
 
     val filterConditionStr: String = transformationOptions.filterCondition
-    val filterConditionColumn: Column = CatalogParser.parse(filterConditionStr)
+    val filterConditionColumn: Column = SQLFunctionParser.parse(filterConditionStr)
 
     logger.info(s"Successfully parsed filter condition $filterConditionStr")
     dataFrame.filter(filterConditionColumn)

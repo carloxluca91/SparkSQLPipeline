@@ -2,7 +2,7 @@ package it.luca.pipeline.step.transform
 
 import argonaut.DecodeJson
 import it.luca.pipeline.step.common.AbstractStep
-import it.luca.pipeline.step.transform.common.{SingleSrcTransformationOptions, TransformationOptions}
+import it.luca.pipeline.step.transform.common.{MultipleSrcTransformationOptions, SingleSrcTransformationOptions, TransformationOptions}
 import it.luca.pipeline.step.transform.option._
 import it.luca.pipeline.step.transform.transformation._
 import org.apache.log4j.Logger
@@ -24,7 +24,13 @@ case class TransformStep(override val name: String,
     // Transform input dataframe according to matched pattern
     val transformedDataframe: DataFrame = transformationOptions match {
 
-      case jto: JoinTransformationOptions => JoinTransformation.transform(jto, dataframeMap)
+      // Transformations that involve more than one dataframe
+      case mto: MultipleSrcTransformationOptions => mto match {
+
+        case jto: JoinTransformationOptions => JoinTransformation.transform(jto, dataframeMap)
+        case uto: UnionTransformationOptions => UnionTransformation.transform(uto, dataframeMap)
+      }
+
       case sto: SingleSrcTransformationOptions =>
 
         // Transformations that involve a single dataframe
