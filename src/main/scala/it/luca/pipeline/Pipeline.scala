@@ -14,7 +14,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
 
-case class Pipeline(name: String, description: String, pipelineSteps: Option[List[AbstractStep]]) {
+case class Pipeline(name: String, description: String, steps: Option[List[AbstractStep]]) {
 
   private val logger = Logger.getLogger(classOf[Pipeline])
   private val dataframeMap: mutable.Map[String, DataFrame] = mutable.Map.empty[String, DataFrame]
@@ -38,14 +38,14 @@ case class Pipeline(name: String, description: String, pipelineSteps: Option[Lis
 
   def run(sparkSession: SparkSession): (Boolean, Seq[LogRecord]) = {
 
-    if (pipelineSteps.nonEmpty) {
+    if (steps.nonEmpty) {
 
       // If some steps are defined
       val logRecords: mutable.ListBuffer[LogRecord] = mutable.ListBuffer.empty[LogRecord]
-      val numberOfSteps = pipelineSteps.get.length
-      val pipelineStepsWithOneBasedIndex: Seq[(AbstractStep, Int)] = pipelineSteps.get
+      val numberOfSteps = steps.get.length
+      val stepsZippedWithOneBasedIndex: Seq[(AbstractStep, Int)] = steps.get
         .zip(1 to numberOfSteps)
-      for ((abstractStep, stepIndex) <- pipelineStepsWithOneBasedIndex) {
+      for ((abstractStep, stepIndex) <- stepsZippedWithOneBasedIndex) {
 
         // Try to execute them one by one according to matched pattern
         val stepName: String = abstractStep.name
@@ -55,14 +55,14 @@ case class Pipeline(name: String, description: String, pipelineSteps: Option[Lis
           abstractStep match {
             case readStep: ReadStep =>
               val readDataframe: DataFrame = readStep.read(sparkSession)
-              updateDataframeMap(readStep.dataframeId, readDataframe)
+              updateDataframeMap(readStep.outputDfId, readDataframe)
 
             case transformStep: TransformStep =>
               val transformedDataframe: DataFrame = transformStep.transform(dataframeMap)
-              updateDataframeMap(transformStep.dataframeId, transformedDataframe)
+              updateDataframeMap(transformStep.outputDfId, transformedDataframe)
 
             case writeStep: WriteStep =>
-              val dataframeToWrite: DataFrame = dataframeMap(writeStep.dataframeId)
+              val dataframeToWrite: DataFrame = dataframeMap(writeStep.outputDfId)
               writeStep.write(dataframeToWrite)
           }
         }

@@ -8,9 +8,9 @@ object ScoptParser {
 
     override def toString: String = {
 
-      s"Input configuration:\n" +
-        s"    -${ScoptOption.PipelineName.shortOption} (--${ScoptOption.PipelineName.longOption}) = $pipelineName," +
-        s"    -${ScoptOption.PropertiesFile.shortOption} (--${ScoptOption.PropertiesFile.description}) = $jobPropertiesFile"
+      s"Input configuration:\n\n" +
+        s"    -${ScoptOption.PipelineName.shortOption} (--${ScoptOption.PipelineName.longOption}) = '$pipelineName'," +
+        s"    -${ScoptOption.PropertiesFile.shortOption} (--${ScoptOption.PropertiesFile.description}) = '$jobPropertiesFile'"
     }
   }
 

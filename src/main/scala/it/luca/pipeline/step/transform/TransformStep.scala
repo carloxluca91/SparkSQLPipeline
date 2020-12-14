@@ -2,9 +2,9 @@ package it.luca.pipeline.step.transform
 
 import argonaut.DecodeJson
 import it.luca.pipeline.step.common.AbstractStep
-import it.luca.pipeline.step.transform.common.{MultipleSrcTransformationOptions, SingleSrcTransformationOptions, TransformationOptions}
-import it.luca.pipeline.step.transform.option._
-import it.luca.pipeline.step.transform.transformation._
+import it.luca.pipeline.step.transform.option.common.{MultipleSrcTransformationOptions, SingleSrcTransformationOptions, TransformationOptions}
+import it.luca.pipeline.step.transform.option.concrete._
+import it.luca.pipeline.step.transform.transformation.concrete._
 import org.apache.log4j.Logger
 import org.apache.spark.sql.DataFrame
 
@@ -13,9 +13,9 @@ import scala.collection.mutable
 case class TransformStep(override val name: String,
                          override val description: String,
                          override val stepType: String,
-                         override val dataframeId: String,
+                         override val outputDfId: String,
                          transformationOptions: TransformationOptions)
-  extends AbstractStep(name, description, stepType, dataframeId) {
+  extends AbstractStep(name, description, stepType, outputDfId) {
 
   private val logger = Logger.getLogger(getClass)
 
@@ -25,7 +25,7 @@ case class TransformStep(override val name: String,
     val transformedDataframe: DataFrame = transformationOptions match {
 
       // Transformations that involve more than one dataframe
-      case mto: MultipleSrcTransformationOptions => mto match {
+      case mto: MultipleSrcTransformationOptions[_] => mto match {
 
         case jto: JoinTransformationOptions => JoinTransformation.transform(jto, dataframeMap)
         case uto: UnionTransformationOptions => UnionTransformation.transform(uto, dataframeMap)
@@ -34,7 +34,7 @@ case class TransformStep(override val name: String,
       case sto: SingleSrcTransformationOptions =>
 
         // Transformations that involve a single dataframe
-        val inputDataframe: DataFrame = dataframeMap(sto.inputSourceId)
+        val inputDataframe: DataFrame = dataframeMap(sto.inputDfId)
         sto match {
 
           case d: DropColumnTransformationOptions => DropColumnTransformation.transform(d, inputDataframe)
@@ -45,7 +45,7 @@ case class TransformStep(override val name: String,
         }
     }
 
-    logger.info(s"Successfully created transformed dataframe '$dataframeId' during transformStep $name")
+    logger.info(s"Successfully created transformed dataframe '$outputDfId' during transformStep $name")
     transformedDataframe
   }
 }

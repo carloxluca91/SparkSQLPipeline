@@ -55,7 +55,7 @@ object LogRecord {
       stepName = abstractStep.name,
       stepType = abstractStep.stepType,
       stepDescription = abstractStep.description,
-      dataframeId = abstractStep.dataframeId,
+      dataframeId = abstractStep.outputDfId,
       stepFinishTime = new Timestamp(System.currentTimeMillis()),
       stepFinishDate = new Date(System.currentTimeMillis()),
       stepFinishCode = if (exceptionOpt.isEmpty) 0 else -1,

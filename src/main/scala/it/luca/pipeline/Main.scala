@@ -15,7 +15,7 @@ object Main extends App {
     case None => logger.error("Error on parsing main arguments")
     case Some(config) =>
 
-      logger.info(s"Successfully parsed main arguments. ${config.toString}")
+      logger.info(s"Successfully parsed main arguments. $config")
       Try {
 
         PipelineRunner.run(config.pipelineName, config.jobPropertiesFile)

@@ -38,7 +38,7 @@ object PipelineRunner {
         logger.info(s"Table '$pipelineInfoTableNameFull' exists and it's not empty. " +
           s"Thus, looking for information on pipeline '$pipelineName' within it")
 
-        val sqlQuery = s"SELECT file_name FROM $pipelineInfoTableNameFull WHERE trim(lower(pipeline_name)) = '${pipelineName.toLowerCase}'"
+        val sqlQuery = s"SELECT file_name FROM $pipelineInfoTableNameFull WHERE TRIM(LOWER(pipeline_name)) = '${pipelineName.toLowerCase}'"
         val pipelineInfoRows: Array[Row] = sparkSession.sql(sqlQuery).collect()
         if (pipelineInfoRows.isEmpty) {
           None

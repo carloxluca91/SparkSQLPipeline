@@ -8,7 +8,7 @@ lazy val pipelineRunnerScala = (project in file("."))
   .settings(
 
     name := "pipelineRunnerScala",
-    version := "0.0.1",
+    version := "0.1.0",
     scalaVersion := "2.11.8",
     scalacOptions ++= Seq(
 
@@ -18,16 +18,16 @@ lazy val pipelineRunnerScala = (project in file("."))
 
     libraryDependencies ++= Seq(
 
+      "com.github.scopt" %% "scopt" % scoptVersion,
       "io.argonaut" %% "argonaut" % argonautVersion,
       "io.argonaut" %% "argonaut-scalaz" % argonautVersion,
       "io.argonaut" %% "argonaut-monocle" % argonautVersion,
       "io.argonaut" %% "argonaut-cats" % argonautVersion,
+      "it.luca.spark" %% "sparkSQL" % sparkSQLibraryVersion,
       "org.apache.spark" %% "spark-core" % sparkVersion % "provided",
       "org.apache.spark" %% "spark-sql" % sparkVersion % "provided",
-      "com.github.scopt" %% "scopt" % scoptVersion,
       "org.scalactic" %% "scalactic" % scalaTestVersion,
-      "org.scalatest" %% "scalatest" % scalaTestVersion % "test",
-      "it.luca.spark" %% "sparkSQL" % sparkSQLibraryVersion
+      "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
     ),
 
     assemblyJarName in assembly := s"${name.value}_${version.value}.jar",

@@ -13,6 +13,7 @@ object JsonValue extends Enumeration {
   val IntType: Val = Val("int")
   val HiveSourceOrDestination: Val = Val("hive")
   val JDBCSourceOrDestination: Val = Val("jdbc")
+  val JoinTransformation: Val = Val("join")
   val ReadStep: Val = Val("read")
   val SelectTransformation: Val = Val("select")
   val StringType: Val = Val("string")
