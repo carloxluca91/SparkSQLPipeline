@@ -1,0 +1,6 @@
+.idea/*
+project/target/*
+project/project/target/*
+target/*
+pipeline/target/*
+sparkSQL/target/*
