@@ -1,4 +1,6 @@
-/.idea/*
-/target/*
-/project/target/*
-/project/project/target/
+.idea/*
+project/target/*
+project/project/target/*
+target/*
+pipeline/target/*
+sparkSQL/target/*
