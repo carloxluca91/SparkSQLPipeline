@@ -1,7 +1,7 @@
 package it.luca.pipeline.step.read
 
 import argonaut.DecodeJson
-import it.luca.pipeline.step.common.{AbstractStep, ReadOptions}
+import it.luca.pipeline.step.common.AbstractStep
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, SparkSession}
 

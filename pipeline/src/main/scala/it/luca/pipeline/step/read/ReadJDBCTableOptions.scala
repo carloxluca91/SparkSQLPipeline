@@ -1,7 +1,7 @@
 package it.luca.pipeline.step.read
 
 import argonaut.DecodeJson
-import it.luca.pipeline.step.common.{JDBCOptions, ReadTableOptions}
+import it.luca.pipeline.step.common.JDBCOptions
 
 case class ReadJDBCTableOptions(override val sourceType: String,
                                 override val dbName: String,

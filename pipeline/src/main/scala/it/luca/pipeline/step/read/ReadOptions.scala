@@ -1,10 +1,9 @@
-package it.luca.pipeline.step.common
+package it.luca.pipeline.step.read
 
 import argonaut.DecodeJson
 import it.luca.pipeline.json.{DecodeJsonSubTypes, JsonField, JsonValue}
-import it.luca.pipeline.step.read.{ReadCsvOptions, ReadHiveTableOptions}
 
-abstract class ReadOptions(val sourceType: String)
+sealed abstract class ReadOptions(val sourceType: String)
 
 object ReadOptions extends DecodeJsonSubTypes[ReadOptions] {
 
