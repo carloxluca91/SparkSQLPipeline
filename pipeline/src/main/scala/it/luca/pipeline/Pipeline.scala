@@ -58,10 +58,10 @@ case class Pipeline(name: String, description: String, steps: List[AbstractStep]
 
             case transformStep: TransformStep =>
               val transformedDataframe: DataFrame = transformStep.transform(dataframeMap)
-              updateDataframeMap(transformStep.alias, transformedDataframe)
+              updateDataframeMap(transformStep.inputAlias, transformedDataframe)
 
             case writeStep: WriteStep =>
-              val dataframeToWrite: DataFrame = dataframeMap(writeStep.alias)
+              val dataframeToWrite: DataFrame = dataframeMap(writeStep.inputAlias)
               writeStep.write(dataframeToWrite)
           }
         }

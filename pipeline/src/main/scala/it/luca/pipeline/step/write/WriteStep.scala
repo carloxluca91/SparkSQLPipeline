@@ -5,22 +5,22 @@ import it.luca.pipeline.step.common.AbstractStep
 import it.luca.pipeline.step.write.option.common.{WriteFileOptions, WriteOptions, WriteTableOptions}
 import it.luca.pipeline.step.write.option.concrete._
 import it.luca.pipeline.step.write.writer.concrete._
-import it.luca.spark.sql.utils.DataFrameUtils
+import it.luca.spark.sql.utils._
 import org.apache.log4j.Logger
 import org.apache.spark.sql.DataFrame
 
 case class WriteStep(override val name: String,
                      override val description: String,
                      override val stepType: String,
-                     override val alias: String,
+                     inputAlias: String,
                      writeOptions: WriteOptions)
-  extends AbstractStep(name, description, stepType, alias) {
+  extends AbstractStep(name, description, stepType, inputAlias) {
 
-  private val logger = Logger.getLogger(getClass)
+  private val log = Logger.getLogger(getClass)
 
   def write(dataFrame: DataFrame): Unit = {
 
-    logger.info(s"DataFrame to be written ('$alias') has schema: ${DataFrameUtils.dataframeSchema(dataFrame)}")
+    log.info(s"DataFrame to be written ('$inputAlias') has schema: ${dataFrame.prettySchema}")
 
     writeOptions match {
       case _: WriteFileOptions =>
@@ -30,7 +30,7 @@ case class WriteStep(override val name: String,
       }
     }
 
-    logger.info(s"Successfully written dataframe '$alias' during writeStep $name")
+    log.info(s"Successfully written dataframe '$inputAlias' during writeStep $name")
   }
 }
 

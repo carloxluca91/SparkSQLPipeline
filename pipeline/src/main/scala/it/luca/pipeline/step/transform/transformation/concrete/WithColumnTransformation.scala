@@ -1,6 +1,6 @@
 package it.luca.pipeline.step.transform.transformation.concrete
 
-import it.luca.pipeline.step.transform.option.concrete.WithColumnTransformationOptions
+import it.luca.pipeline.step.transform.WithColumnTransformationOptions
 import it.luca.pipeline.step.transform.transformation.common.SingleSrcTransformation
 import it.luca.spark.sql.catalog.parser.SQLFunctionParser
 import org.apache.log4j.Logger
