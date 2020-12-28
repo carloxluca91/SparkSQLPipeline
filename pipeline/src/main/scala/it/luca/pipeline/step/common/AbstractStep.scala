@@ -6,11 +6,7 @@ import it.luca.pipeline.step.read.ReadStep
 import it.luca.pipeline.step.transform.TransformStep
 import it.luca.pipeline.step.write.WriteStep
 
-abstract class AbstractStep(val name: String,
-                            val description: String,
-                            val stepType: String,
-                            val alias: String)
-
+abstract class AbstractStep(val name: String, val description: String, val stepType: String, val alias: String)
 object AbstractStep extends DecodeJsonSubTypes[AbstractStep]{
 
   override protected val discriminatorField: String = JsonField.StepType.label

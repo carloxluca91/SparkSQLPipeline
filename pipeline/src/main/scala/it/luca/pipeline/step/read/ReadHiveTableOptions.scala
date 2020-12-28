@@ -1,7 +1,6 @@
 package it.luca.pipeline.step.read
 
 import argonaut.DecodeJson
-import it.luca.pipeline.step.common.ReadTableOptions
 
 case class ReadHiveTableOptions(override val sourceType: String,
                                 override val dbName: String,
