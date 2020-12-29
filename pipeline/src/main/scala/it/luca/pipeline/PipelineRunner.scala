@@ -124,7 +124,7 @@ case class PipelineRunner(private val inputConfiguration: InputConfiguration) {
       val jsonString: String = Source
         .fromInputStream(hadoopFs.open(new Path(pipelineFilePath)))
         .getLines()
-        .mkString("")
+        .mkString("\n")
 
       hadoopFs.close()
       val pipeline: Pipeline = JsonUtils.decodeAndInterpolateJsonString[Pipeline](jsonString, jobProperties)
