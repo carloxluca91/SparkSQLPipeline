@@ -9,7 +9,7 @@ lazy val commonSettings = Seq(
 
   scalaVersion := "2.11.12",
   organization := "it.luca",
-  version := "0.0.1",
+  version := "0.1.0",
 
   // Scala compiler options
   scalacOptions ++= Seq(
