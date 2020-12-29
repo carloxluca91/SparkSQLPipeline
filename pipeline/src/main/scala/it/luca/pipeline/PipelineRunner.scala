@@ -6,8 +6,11 @@ import it.luca.pipeline.option.ScoptParser.InputConfiguration
 import it.luca.spark.sql.SparkSessionUtils
 import it.luca.spark.sql.extensions._
 import org.apache.commons.configuration.PropertiesConfiguration
+import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
+
+import scala.io.Source
 
 case class PipelineRunner(private val inputConfiguration: InputConfiguration) {
 
@@ -115,7 +118,16 @@ case class PipelineRunner(private val inputConfiguration: InputConfiguration) {
     if (pipelineFilePathOpt.nonEmpty) {
 
       // Try to parse provided json file as a Pipeline and run it
-      val pipeline: Pipeline = JsonUtils.decodeAndInterpolateJsonFile[Pipeline](pipelineFilePathOpt.get, jobProperties)
+      val pipelineFilePath = pipelineFilePathOpt.get
+      log.info(s"Content of pipeline '$pipelineName' available at HDFS path '$pipelineFilePath'")
+      val hadoopFs = FileSystem.get(sparkSession.sparkContext.hadoopConfiguration)
+      val jsonString: String = Source
+        .fromInputStream(hadoopFs.open(new Path(pipelineFilePath)))
+        .getLines()
+        .mkString("")
+
+      hadoopFs.close()
+      val pipeline: Pipeline = JsonUtils.decodeAndInterpolateJsonString[Pipeline](jsonString, jobProperties)
       val (pipelineFullyExecuted, logRecords) : (Boolean, Seq[LogRecord]) = pipeline.run(sparkSession)
       insertLogRecords(logRecords, sparkSession, jobProperties)
       if (pipelineFullyExecuted) {
