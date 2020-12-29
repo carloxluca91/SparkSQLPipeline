@@ -1,5 +1,6 @@
 package it.luca.pipeline.step.read
 
+import argonaut.DecodeJson
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -24,4 +25,13 @@ object HiveTableReader extends Reader[ReadHiveTableOptions] {
         dataFrame
     }
   }
+}
+
+case class ReadHiveTableOptions(override val sourceType: String, override val dbName: String, override val tableName: String,
+                                override val query: Option[String])
+  extends ReadTableOptions(sourceType, dbName, tableName, query)
+
+object ReadHiveTableOptions {
+
+  implicit def decodeJson: DecodeJson[ReadHiveTableOptions] = DecodeJson.derive[ReadHiveTableOptions]
 }

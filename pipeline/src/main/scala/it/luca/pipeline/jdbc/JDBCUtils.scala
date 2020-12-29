@@ -8,7 +8,7 @@ import scala.collection.mutable.ListBuffer
 
 object JDBCUtils {
 
-  private val logger = Logger.getLogger(getClass)
+  private val log = Logger.getLogger(getClass)
 
   final def getSparkWriterJDBCOptions(jdbcUrl: String, jdbcDriver: String, jdbcUser: String, jdbcPassword: String,
                                       jdbcUseSSL: String): Map[String, String] = {
@@ -25,9 +25,9 @@ object JDBCUtils {
     Class.forName(jdbcDriver)
 
     val jdbcUrlConnectionStr = s"$jdbcUrl/?useSSL=$jdbcUseSSL"
-    logger.info(s"Attempting to connect to JDBC url $jdbcUrlConnectionStr with credentials ($jdbcUserName, $jdbcPassWord)")
+    log.info(s"Attempting to connect to JDBC url $jdbcUrlConnectionStr with credentials ($jdbcUserName, $jdbcPassWord)")
     val connection = DriverManager.getConnection(jdbcUrlConnectionStr, jdbcUserName, jdbcPassWord)
-    logger.info(s"Successfully connected to JDBC url $jdbcUrlConnectionStr with credentials ($jdbcUserName, $jdbcPassWord)")
+    log.info(s"Successfully connected to JDBC url $jdbcUrlConnectionStr with credentials ($jdbcUserName, $jdbcPassWord)")
     connection
   }
 
@@ -47,19 +47,19 @@ object JDBCUtils {
     val existingDatabases: Seq[String] = getExistingDatabases(connection)
     val doesNotExistYet = !existingDatabases.contains(dbName.toLowerCase)
     if (doesNotExistYet) {
-      logger.info(s"Database '$dbName' does not exist yet. Thus, creating it now")
+      log.info(s"Database '$dbName' does not exist yet. Thus, creating it now")
       val createDbStatement = connection.createStatement
       createDbStatement.executeUpdate("CREATE DATABASE IF NOT EXISTS " + dbName.toLowerCase)
-      logger.info(s"Successfully created database '$dbName'")
+      log.info(s"Successfully created database '$dbName'")
     } else {
-      logger.warn(String.format("Database '%s' already exists. Thus, not creating it again", dbName))
+      log.warn(String.format("Database '%s' already exists. Thus, not creating it again", dbName))
     }
 
     if (closeAfterCreation) {
       connection.close()
-      logger.info("Successfully closed JDBC connection")
+      log.info("Successfully closed JDBC connection")
     } else {
-      logger.warn("Not closing JDBC connection. Remember to close it manually when necessary")
+      log.warn("Not closing JDBC connection. Remember to close it manually when necessary")
     }
   }
 

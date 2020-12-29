@@ -1,4 +1,4 @@
-package it.luca.spark.sql.utils
+package it.luca.spark.sql.extensions
 
 import org.apache.spark.sql.DataFrame
 
