@@ -7,7 +7,7 @@ import it.luca.pipeline.step.common.AbstractStep
 import it.luca.pipeline.step.read.ReadStep
 import it.luca.pipeline.step.transform.TransformStep
 import it.luca.pipeline.step.write.WriteStep
-import it.luca.spark.sql.utils._
+import it.luca.spark.sql.extensions._
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, SparkSession}
 

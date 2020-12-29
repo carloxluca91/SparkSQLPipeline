@@ -2,51 +2,58 @@ package it.luca.pipeline.step.transform
 
 import argonaut.DecodeJson
 import it.luca.pipeline.step.common.AbstractStep
-import it.luca.pipeline.step.transform.option.concrete._
-import it.luca.pipeline.step.transform.transformation.concrete._
+import it.luca.spark.sql.extensions._
 import org.apache.log4j.Logger
 import org.apache.spark.sql.DataFrame
 
 import scala.collection.mutable
 
-case class TransformStep(override val name: String,
-                         override val description: String,
-                         override val stepType: String,
-                         inputAlias: String,
-                         outputAlias: String,
-                         transformations: List[TransformationOptions])
+case class TransformStep(override val name: String, override val description: String, override val stepType: String,
+                         inputAlias: String, outputAlias: String, transformations: List[TransformationOptions])
   extends AbstractStep(name, description, stepType, inputAlias) {
 
-  private val logger = Logger.getLogger(getClass)
+  private val log = Logger.getLogger(getClass)
 
   def transform(dataframeMap: mutable.Map[String, DataFrame]): DataFrame = {
 
-    // Transform input dataframe according to matched pattern
-    val transformedDataframe: DataFrame = transformations match {
+    // Apply sequential transformations to input dataframe according to matched pattern
+    val inputDataFrame = dataframeMap(inputAlias)
 
-      // Transformations that involve more than one dataframe
-      case mto: MultipleDfTransformationOptions[_] => mto match {
+    log.info(s"Starting to execute each of the ${transformations.length} transformation(s) on input dataFrame '$inputAlias'")
+    val transformedDataFrame: DataFrame = transformations
+      .sortBy(_.transformationOrder)
+      .zip(1 to transformations.length)
+      .foldLeft(inputDataFrame)((df, tuple2) => {
 
-        case jto: JoinTransformationOptions => Join.transform(jto, dataframeMap)
-        case uto: UnionOptions => UnionTransformation.transform(uto, dataframeMap)
-      }
+        val (transformationOption, index) = tuple2
+        log.info(s"Starting to execute transformation # $index (${transformationOption.transformationType})")
+        val stepTransformedDataFrame: DataFrame = transformationOption match {
+          case d: DropOptions => Drop.transform(d, df)
+          case f: FilterOptions => Filter.transform(f, df)
+          case j: JoinTransformationOptions =>
 
-      case sto: SingleDfTransformationOptions =>
+            // Define the two dataFrames involved
+            val (leftDataFrame, rightDataFrame): (DataFrame, DataFrame) = (df, dataframeMap(j.joinOptions.rightAlias))
+            Join.transform(j, leftDataFrame, rightDataFrame)
 
-        // Transformations that involve a single dataframe
-        val inputDataframe: DataFrame = dataframeMap(sto.inputAlias)
-        sto match {
+          case s: SelectOptions => Select.transform(s, df)
+          case u: UnionOptions =>
 
-          case d: DropColumnTransformationOptions => Drop.transform(d, inputDataframe)
-          case f: FilterOptions => Filter.transform(f, inputDataframe)
-          case s: SelectOptions => Select.transform(s, inputDataframe)
-          case r: WithColumnRenamedOptions => WithColumnRenamedTransformation.transform(r, inputDataframe)
-          case w: WithColumnTransformationOptions => WithColumnTransformation.transform(w, inputDataframe)
+            // Define dataFrames to be concatenated
+            val dataFrames = u.unionAliases.map(dataframeMap)
+            Union.transform(u, dataFrames: _*)
+
+          case w: WithColumnOptions => WithColumn.transform(w, df)
+          case wr: WithColumnRenamedOptions => WithColumnRenamed.transform(wr, df)
         }
-    }
 
-    logger.info(s"Successfully created transformed dataframe '$inputAlias' during transformStep $name")
-    transformedDataframe
+        log.info(s"Successfully executed transformation # $index (${transformationOption.transformationType}). " +
+          s"New dataFrame schema : ${stepTransformedDataFrame.prettySchema}")
+        stepTransformedDataFrame
+      })
+
+    log.info(s"Successfully executed all of ${transformations.length} transformation(s) on input dataFrame '$inputAlias'")
+    transformedDataFrame
   }
 }
 

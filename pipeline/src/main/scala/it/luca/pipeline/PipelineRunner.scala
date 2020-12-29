@@ -3,7 +3,8 @@ package it.luca.pipeline
 import it.luca.pipeline.data.LogRecord
 import it.luca.pipeline.json.JsonUtils
 import it.luca.pipeline.option.ScoptParser.InputConfiguration
-import it.luca.spark.sql.utils._
+import it.luca.spark.sql.SparkSessionUtils
+import it.luca.spark.sql.extensions._
 import org.apache.commons.configuration.PropertiesConfiguration
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
@@ -15,18 +16,18 @@ case class PipelineRunner(private val inputConfiguration: InputConfiguration) {
 
   private def getPipelineFilePathOpt(sparkSession: SparkSession, jobProperties: PropertiesConfiguration): Option[String] = {
 
-    val dbName = jobProperties.getString("hive.pipelineRunner.db.name").toLowerCase
-    val tableName = jobProperties.getString("hive.pipelineInfo.db.name").toLowerCase
-    val existsDb: Boolean = sparkSession.catalog.databaseExists(dbName)
-    val existsTable: Boolean = if (existsDb) sparkSession.catalog.tableExists(dbName,  tableName) else false
-    val tableIsNotEmpty: Boolean = if (existsTable) sparkSession.table(s"$dbName.$tableName").count() > 0 else false
+    val dbName = jobProperties.getString("hive.db.pipelineRunner.name").toLowerCase
+    val tableName = jobProperties.getString("hive.table.pipelineInfo.name").toLowerCase
 
-    // If everything is ok, run provided pipeline (or at least try to ;)
+    // If everything is ok, run provided pipeline (or at least try to ;))
+    val existsDb = sparkSession.catalog.databaseExists(dbName)
+    val existsTable = if (existsDb) sparkSession.catalog.tableExists(dbName, tableName) else false
+    val tableIsNotEmpty = if (existsTable) sparkSession.table(s"$dbName.$tableName").isEmpty else false
     if (existsDb & existsTable & tableIsNotEmpty) {
 
       log.info(s"Table '$dbName.$tableName' exists and it's not empty. Thus, looking for information on pipeline '$pipelineName' within it")
-      val sqlQuery =
-        s"""
+      val sqlQuery = s"""
+           |
            |      SELECT file_name
            |      FROM $dbName.$tableName
            |      WHERE TRIM(LOWER(pipeline_name)) = '${pipelineName.toLowerCase}'
@@ -77,19 +78,18 @@ case class PipelineRunner(private val inputConfiguration: InputConfiguration) {
     log.info(s"Successfully turned list of ${logRecords.size} ${classOf[LogRecord].getSimpleName}(s) " +
       s"into a ${classOf[DataFrame].getSimpleName}. Schema: ${logRecordDfWithSQLColumnNames.prettySchema}")
 
-    // TODO: define properties
-    val logTableDbName = jobProperties.getString("TODO").toLowerCase
-    val logTableName = jobProperties.getString("TODO").toLowerCase
+    val logTableDbName = jobProperties.getString("hive.db.pipelineRunner.name").toLowerCase
+    val logTableName = jobProperties.getString("hive.table.pipelineLog.name").toLowerCase
     val logTableFullName = s"$logTableDbName.$logTableName"
 
     // If logging table does not exist, use .saveAsTable
     sparkSession.createDbIfNotExists(logTableDbName, None)
-    if (sparkSession.catalog.tableExists(logTableDbName, logTableName)) {
+    if (!sparkSession.catalog.tableExists(logTableDbName, logTableName)) {
 
       log.warn(s"Logging table '$logTableFullName' does not exists yet. Creating it now using .saveAsTable")
       logRecordDfWithSQLColumnNames
         .write
-        .mode(SaveMode.Append)
+        .mode(SaveMode.ErrorIfExists)
         .saveAsTable(logTableFullName)
 
     } else {

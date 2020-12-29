@@ -1,12 +1,10 @@
-package it.luca.pipeline.step.transform.transformation.concrete
+package it.luca.pipeline.step.transform
 
-import it.luca.pipeline.step.transform.{WithColumnRenamedOption, WithColumnRenamedOptions}
-import it.luca.pipeline.step.transform.option.concrete.WithColumnRenamedOption
-import it.luca.pipeline.step.transform.transformation.common.SingleSrcTransformation
+import argonaut.DecodeJson
 import org.apache.log4j.Logger
 import org.apache.spark.sql.DataFrame
 
-object WithColumnRenamedTransformation extends SingleSrcTransformation[WithColumnRenamedOptions] {
+object WithColumnRenamed extends SingleDfTransformation[WithColumnRenamedOptions] {
 
   private val logger = Logger.getLogger(getClass)
 
@@ -24,4 +22,19 @@ object WithColumnRenamedTransformation extends SingleSrcTransformation[WithColum
     logger.info(s"Successfully renamed all of ${columnsToRename.size} column(s)")
     outputDf
   }
+}
+
+case class WithColumnRenamedOptions(override val transformationType: String, override val transformationOrder: Int, columns: List[WithColumnRenamedOption])
+  extends TransformationOptions(transformationType, transformationOrder)
+
+object WithColumnRenamedOptions {
+
+  implicit def decodeJson: DecodeJson[WithColumnRenamedOptions] = DecodeJson.derive[WithColumnRenamedOptions]
+}
+
+case class WithColumnRenamedOption(oldName: String, newName: String)
+
+object WithColumnRenamedOption {
+
+  implicit def decodeJson: DecodeJson[WithColumnRenamedOption] = DecodeJson.derive[WithColumnRenamedOption]
 }

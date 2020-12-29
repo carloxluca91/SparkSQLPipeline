@@ -1,5 +1,7 @@
 package it.luca.pipeline.step.read
 
+import argonaut.DecodeJson
+import it.luca.pipeline.step.common.CsvOptions
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -25,7 +27,15 @@ object CsvReader extends Reader[ReadCsvOptions] {
       .format("csv")
       .option("sep", separator)
       .option("header", header)
-      .schema(readOptions.csvOptions.toStructType)
+      .schema(readOptions.csvOptions.schemaAsStructType)
       .load(csvPath)
   }
+}
+
+case class ReadCsvOptions(override val sourceType: String, override val path: String, csvOptions: CsvOptions)
+  extends ReadFileOptions(sourceType, path)
+
+object ReadCsvOptions {
+
+  implicit def decodeJson: DecodeJson[ReadCsvOptions] = DecodeJson.derive[ReadCsvOptions]
 }

@@ -1,16 +1,14 @@
-package it.luca.pipeline.step.write.writer.common
+package it.luca.pipeline.step.write
 
-import it.luca.pipeline.step.write.option.common.{SaveOptions, WriteOptions}
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, DataFrameWriter, Row}
 
 trait Writer[T <: WriteOptions] {
 
-  private final val logger = Logger.getLogger(getClass)
+  private val log = Logger.getLogger(getClass)
 
-  final def dataFrameWriter(dataFrame: DataFrame, writeOptions: T): DataFrameWriter[Row] = {
+  private def setUpWriter(dataFrame: DataFrame, saveOptions: SaveOptions): DataFrameWriter[Row] = {
 
-    val saveOptions: SaveOptions = writeOptions.saveOptions
     val (coalesceInfoStr, dataFrameMaybeCoalesced): (String, DataFrame) = saveOptions.coalesce match {
       case None => ("Coalesce option unset", dataFrame)
       case Some(x) => (s"Coalesce option = $x", dataFrame.coalesce(x))
@@ -21,10 +19,15 @@ trait Writer[T <: WriteOptions] {
       case Some(x) => (s"partitionBy option = ${x.map(y => s"'$y'").mkString(", ")}", dataFrameMaybeCoalesced.write.partitionBy(x: _*))
     }
 
-    logger.info(s"$coalesceInfoStr, $partitionByInfoStr")
+    log.info(s"$coalesceInfoStr, $partitionByInfoStr")
     dataframeWriteMaybePartitioned
   }
 
-  def write(dataFrame: DataFrame, writeOptions: T): Unit
+  protected def writeDataFrame(dataFrameWriter: DataFrameWriter[Row], writeOptions: T): Unit
 
+  def write(dataFrame: DataFrame, writeOptions: T): Unit = {
+
+    val dataFrameWriter: DataFrameWriter[Row] = setUpWriter(dataFrame, writeOptions.saveOptions)
+    writeDataFrame(dataFrameWriter, writeOptions)
+  }
 }
