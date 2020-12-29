@@ -1,7 +1,6 @@
-package it.luca.pipeline.step.transform.transformation.concrete
+package it.luca.pipeline.step.transform
 
-import it.luca.pipeline.step.transform.transformation.TwoDfTransformation
-import it.luca.pipeline.step.transform.{JoinSelectColumn, JoinTransformationOptions, SingleJoinCondition}
+import argonaut.DecodeJson
 import it.luca.spark.sql.catalog.parser.SQLFunctionParser
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{Column, DataFrame}
@@ -71,4 +70,38 @@ object Join extends TwoDfTransformation[JoinTransformationOptions] {
       .join(secondDataFrame, joinCondition, joinOptions.joinType)
       .select(selectColumns: _*)
   }
+}
+
+case class JoinTransformationOptions(override val transformationType: String,
+                                     override val transformationOrder: Int,
+                                     joinOptions: JoinOptions)
+  extends TransformationOptions(transformationType, transformationOrder)
+
+object JoinTransformationOptions {
+
+  implicit def decodeJson: DecodeJson[JoinTransformationOptions] = DecodeJson.derive[JoinTransformationOptions]
+}
+
+case class JoinOptions(joinType: String, rightAlias: String, joinCondition: List[SingleJoinCondition], selectColumns: List[JoinSelectColumn])
+
+object JoinOptions {
+
+  implicit def decodeJson: DecodeJson[JoinOptions] = DecodeJson.derive[JoinOptions]
+}
+
+case class SingleJoinCondition(leftSide: String, rightSide: String) {
+
+  override def toString: String = s"($leftSide.equalTo($rightSide)"
+}
+
+object SingleJoinCondition {
+
+  implicit def decodeJson: DecodeJson[SingleJoinCondition] = DecodeJson.derive[SingleJoinCondition]
+}
+
+case class JoinSelectColumn(side: String, expression: String, alias: Option[String])
+
+object JoinSelectColumn {
+
+  implicit def decodeJson: DecodeJson[JoinSelectColumn] = DecodeJson.derive[JoinSelectColumn]
 }

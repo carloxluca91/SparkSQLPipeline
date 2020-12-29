@@ -1,7 +1,7 @@
 package it.luca.spark.sql.catalog.functions
 
 import it.luca.spark.sql.catalog.common.SingleColumnSQLFunction
-import it.luca.spark.sql.utils.DataTypeUtils
+import it.luca.spark.sql.types.DataTypeUtils
 import org.apache.spark.sql.Column
 
 case class Cast(override val expression: String)

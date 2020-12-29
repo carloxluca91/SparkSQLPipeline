@@ -1,17 +1,15 @@
 package it.luca.pipeline.step.common
 
 import argonaut.DecodeJson
-import it.luca.spark.sql.utils.DataTypeUtils
+import it.luca.spark.sql.types.DataTypeUtils
 import org.apache.log4j.Logger
 import org.apache.spark.sql.types.{StructField, StructType}
 
-case class CsvOptions(schema: List[CsvColumnSpecification],
-                      separator: Option[String],
-                      header: Option[String]) {
+case class CsvOptions(schema: List[CsvColumnSpecification], separator: Option[String], header: Option[String]) {
 
   private val log = Logger.getLogger(classOf[CsvOptions])
 
-  def toStructType: StructType = {
+  def schemaAsStructType: StructType = {
 
     log.info(s"Processing metadata for each of the ${schema.size} column(s)")
     val csvStructFields: Seq[StructField] = schema
@@ -27,10 +25,7 @@ object CsvOptions {
   implicit def decodeJson: DecodeJson[CsvOptions] = DecodeJson.derive[CsvOptions]
 }
 
-case class CsvColumnSpecification(name: String,
-                                  description: String,
-                                  dataType: String,
-                                  nullable: Boolean)
+case class CsvColumnSpecification(name: String, dataType: String, nullable: Boolean)
 
 object CsvColumnSpecification {
 

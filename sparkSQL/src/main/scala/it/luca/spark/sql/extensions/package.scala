@@ -2,7 +2,7 @@ package it.luca.spark.sql
 
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-package object utils {
+package object extensions {
 
   implicit def toDataFrameExtensions(dataFrame: DataFrame): DataFrameExtensions = new DataFrameExtensions(dataFrame)
 

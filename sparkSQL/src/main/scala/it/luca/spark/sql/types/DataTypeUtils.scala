@@ -1,4 +1,4 @@
-package it.luca.spark.sql.utils
+package it.luca.spark.sql.types
 
 import org.apache.log4j.Logger
 import org.apache.spark.sql.types.{DataType, DataTypes}

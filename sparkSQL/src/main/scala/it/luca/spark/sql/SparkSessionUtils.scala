@@ -1,4 +1,4 @@
-package it.luca.spark.sql.utils
+package it.luca.spark.sql
 
 import org.apache.log4j.Logger
 import org.apache.spark.sql.SparkSession
@@ -8,14 +8,14 @@ object SparkSessionUtils {
   private val log = Logger.getLogger(getClass)
   private val logSparkSessionInfo: SparkSession => Unit = sparkSession => {
 
-    val details = s"""
-      |
-      |     Successfully initialized ${classOf[SparkSession].getSimpleName}
-      |
-      |     applicationName = '${sparkSession.sparkContext.appName}',
-      |     applicationId = '${sparkSession.sparkContext.applicationId}',
-      |     UI URL = '${sparkSession.sparkContext.uiWebUrl}'
-      |""".stripMargin
+    val details =
+      s"""
+         |
+         |     Successfully initialized ${classOf[SparkSession].getSimpleName}
+         |
+         |     applicationName = '${sparkSession.sparkContext.appName}',
+         |     applicationId = '${sparkSession.sparkContext.applicationId}',
+         |     UI URL = '${sparkSession.sparkContext.uiWebUrl}'""".stripMargin
 
       log.info(details)
     }
