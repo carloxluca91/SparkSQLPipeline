@@ -13,61 +13,53 @@ lazy val commonSettings = Seq(
 
   // Scala compiler options
   scalacOptions ++= Seq(
-
     "-encoding", "UTF-8",
     "-target:jvm-1.8"
   ),
 
-  // Exclude .properties file from packaging
-  (unmanagedResources in Compile) := (unmanagedResources in Compile).value
-    .filterNot(_.getName.endsWith(".properties")),
-
-  // Jar name and merging strategy
-  assemblyJarName in assembly := s"${name.value}_${version.value}.jar",
-  assemblyMergeStrategy in assembly := {
-    case PathList("META-INF", _*) => MergeStrategy.discard
-    case x =>
-      val oldStrategy = (assemblyMergeStrategy in assembly).value
-      oldStrategy(x)
-  }
-
-)
-
-lazy val root = (project in file("."))
-  .aggregate(sparkSQL, pipeline)
-  .settings(
-
-    commonSettings,
-    name := "sparkSQLPipeline"
-  )
-
-lazy val sparkSQL = (project in file("sparkSQL"))
-  .settings(
-
-    commonSettings,
-    name := "sparkSQL",
-    libraryDependencies ++= Seq(
+  libraryDependencies ++= Seq(
       "org.apache.spark" %% "spark-core" % sparkVersion % "provided",
       "org.apache.spark" %% "spark-sql" % sparkVersion % "provided",
       "org.scalactic" %% "scalactic" % scalaTestVersion,
       "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
-    )
+    ),
+
+  // Exclude .properties file from packaging
+  (unmanagedResources in Compile) := (unmanagedResources in Compile).value
+    .filterNot(_.getName.endsWith(".properties"))
+)
+
+// aggregate project for running tasks on both subprojects (except assembly)
+lazy val root = (project in file("."))
+  .aggregate(sparkSQL, pipeline)
+  .settings(
+    clean / aggregate := true,
+    compile / aggregate := true,
+    test / aggregate := true,
+    assembly / aggregate := false
   )
 
+lazy val sparkSQL = (project in file("sparkSQL"))
+  .settings(commonSettings: _*)
+
 lazy val pipeline = (project in file("pipeline"))
+  .settings(commonSettings: _*)
   .settings(
 
-    commonSettings,
-    name := "pipeline",
     libraryDependencies ++= Seq(
       "com.github.scopt" %% "scopt" % scoptVersion,
       "io.argonaut" %% "argonaut" % argonautVersion,
       "io.argonaut" %% "argonaut-scalaz" % argonautVersion,
       "io.argonaut" %% "argonaut-monocle" % argonautVersion,
-      "io.argonaut" %% "argonaut-cats" % argonautVersion,
-      "org.apache.spark" %% "spark-core" % sparkVersion % "provided",
-      "org.apache.spark" %% "spark-sql" % sparkVersion % "provided",
-      "org.scalactic" %% "scalactic" % scalaTestVersion,
-      "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
-    )
+      "io.argonaut" %% "argonaut-cats" % argonautVersion
+    ),
+
+    // Jar name and merging strategy
+    assemblyJarName in assembly := s"sparkSQLPipeline_${version.value}.jar",
+    assemblyMergeStrategy in assembly := {
+      case PathList("META-INF", _*) => MergeStrategy.discard
+      case x =>
+        val oldStrategy = (assemblyMergeStrategy in assembly).value
+        oldStrategy(x)
+    }
   ).dependsOn(sparkSQL)

@@ -42,8 +42,8 @@ class SQLFunctionParserSpec extends AbstractSpec with BeforeAndAfterAll {
       .otherwise(when(firstCol < threshold, ltLabel).otherwise(eqLabel))
 
     val actualColumn = SQLFunctionParser.parse(sqlFunction =
-      s"case(when(greater($firstColStr, lit($threshold)), lit('$gtLabel')), " +
-      s"when(less($firstColStr, lit($threshold)), lit('$ltLabel'))).otherWise(lit('$eqLabel'))")
+      s"case(when(gt($firstColStr, lit($threshold)), lit('$gtLabel')), " +
+      s"when(lt($firstColStr, lit($threshold)), lit('$ltLabel'))).otherWise(lit('$eqLabel'))")
 
    assertEqualColumns(expectedColumn, actualColumn)
   }
@@ -72,12 +72,12 @@ class SQLFunctionParserSpec extends AbstractSpec with BeforeAndAfterAll {
 
     val lit1Str = "lit(1)"
     val testSeq: Seq[(String, Column)] =
-      ("equal", firstCol === 1) ::
-        ("notEqual", firstCol =!= 1) ::
-        ("greater", firstCol > 1) ::
-        ("greaterOrEqual", firstCol >= 1) ::
-        ("less", firstCol < 1) ::
-        ("lessOrEqual", firstCol <= 1) :: Nil
+      ("eq", firstCol === 1) ::
+        ("neq", firstCol =!= 1) ::
+        ("gt", firstCol > 1) ::
+        ("geq", firstCol >= 1) ::
+        ("lt", firstCol < 1) ::
+        ("leq", firstCol <= 1) :: Nil
 
     testSeq foreach {
       case (functionName, expectedColumn) =>
@@ -240,7 +240,7 @@ class SQLFunctionParserSpec extends AbstractSpec with BeforeAndAfterAll {
 
     val (threshold, label) = (0, "OK")
     val expected = when(firstCol > threshold, label)
-    val actual = SQLFunctionParser.parse(s"when(greater($firstColStr, lit($threshold)), lit('$label'))")
+    val actual = SQLFunctionParser.parse(s"when(gt($firstColStr, lit($threshold)), lit('$label'))")
     assertEqualColumns(expected, actual)
   }
 }

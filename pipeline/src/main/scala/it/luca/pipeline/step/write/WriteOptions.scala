@@ -7,7 +7,7 @@ sealed abstract class WriteOptions(val destinationType: String, val saveOptions:
 
 object WriteOptions extends DecodeJsonSubTypes[WriteOptions] {
 
-  override protected val discriminatorField: String = JsonField.DestinationType.label
+  override protected val discriminatorField: String = JsonField.DestinationType
 
   override protected val subclassesEncoders: Map[String, DecodeJson[_ <: WriteOptions]] = Map(
     JsonValue.Hive -> WriteHiveTableOptions.decodeJson)

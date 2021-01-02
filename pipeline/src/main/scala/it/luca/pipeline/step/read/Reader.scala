@@ -14,7 +14,7 @@ sealed abstract class ReadOptions(val sourceType: String)
 
 object ReadOptions extends DecodeJsonSubTypes[ReadOptions] {
 
-  override protected val discriminatorField: String = JsonField.SourceType.label
+  override protected val discriminatorField: String = JsonField.SourceType
   override protected val subclassesEncoders: Map[String, DecodeJson[_ <: ReadOptions]] = Map(
     JsonValue.Csv -> ReadCsvOptions.decodeJson,
     JsonValue.Hive -> ReadHiveTableOptions.decodeJson)

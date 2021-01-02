@@ -11,7 +11,7 @@ object SparkSessionUtils {
     val details =
       s"""
          |
-         |     Successfully initialized ${classOf[SparkSession].getSimpleName}
+         |     Successfully initialized ${classOf[SparkSession].getSimpleName}. Some details:
          |
          |     applicationName = '${sparkSession.sparkContext.appName}',
          |     applicationId = '${sparkSession.sparkContext.applicationId}',

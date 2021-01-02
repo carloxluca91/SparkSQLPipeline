@@ -10,7 +10,7 @@ abstract class AbstractStep(val name: String, val description: String, val stepT
 
 object AbstractStep extends DecodeJsonSubTypes[AbstractStep]{
 
-  override protected val discriminatorField: String = JsonField.StepType.label
+  override protected val discriminatorField: String = JsonField.StepType
   override protected val subclassesEncoders: Map[String, DecodeJson[_ <: AbstractStep]] = Map(
     JsonValue.Read -> ReadStep.decodeJson,
     JsonValue.Transform -> TransformStep.decodeJson,

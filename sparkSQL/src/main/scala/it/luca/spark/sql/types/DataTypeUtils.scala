@@ -5,7 +5,7 @@ import org.apache.spark.sql.types.{DataType, DataTypes}
 
 object DataTypeUtils {
 
-  private val logger = Logger.getLogger(getClass)
+  private val log = Logger.getLogger(getClass)
   private val dataTypeMap: Map[String, DataType] = Map(
 
     "string" -> DataTypes.StringType,
@@ -20,7 +20,7 @@ object DataTypeUtils {
   def dataType(dataType: String): DataType = {
 
     if (!dataTypeMap.contains(dataType)) {
-      logger.warn(s"Datatype '$dataType' not defined. Returning default datatype (${DataTypes.StringType})")
+      log.warn(s"Datatype '$dataType' not defined. Returning default datatype (${DataTypes.StringType})")
     }
 
     dataTypeMap.getOrElse(dataType, DataTypes.StringType)

@@ -88,9 +88,10 @@ object SQLFunctionParser {
 
       // Try to determine "closest" expression
       val functionNameRegex = "^(\\w+)\\(".r
-      val exceptionMsgSuffix: String = functionNameRegex.findFirstIn(sqlFunction) match {
+      val exceptionMsgSuffix: String = functionNameRegex.findFirstMatchIn(sqlFunction) match {
         case None => "Unable to provide any hint about function name"
-        case Some(x) => s"Hint: provided function name is <$x>. Check the syntax of closest regex within ${SQLCatalog.getClass.getName}"
+        case Some(rMatch) => s"Hint: provided function name is '${rMatch.group(1)}'. " +
+          s"Check the syntax of closest regex within ${SQLCatalog.getClass.getName}"
       }
 
       val exceptionMsg = s"Unable to match such SQL function <$sqlFunction>. $exceptionMsgSuffix"

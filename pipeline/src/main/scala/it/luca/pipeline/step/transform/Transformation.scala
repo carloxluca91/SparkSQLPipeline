@@ -49,7 +49,7 @@ abstract class TransformationOptions(val transformationType: String, val transfo
 
 object TransformationOptions extends DecodeJsonSubTypes[TransformationOptions] {
 
-  override protected val discriminatorField: String = JsonField.TransformationType.label
+  override protected val discriminatorField: String = JsonField.TransformationType
   override protected val subclassesEncoders: Map[String, DecodeJson[_ <: TransformationOptions]] = Map(
     JsonValue.Drop -> DropOptions.decodeJson,
     JsonValue.Join -> JoinTransformationOptions.decodeJson,

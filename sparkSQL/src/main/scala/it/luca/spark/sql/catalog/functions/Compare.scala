@@ -11,16 +11,13 @@ case class Compare(override val expression: String)
   override protected val combiningFunction: (Column, Column) => Column = {
 
     // Resolve comparing operator depending on function name
-    val functionNameLC: String = functionName.toLowerCase
-
-    if (functionNameLC startsWith "less") {
-      if (functionNameLC endsWith "equal") _ <= _ else _ < _
-
-    } else if (functionNameLC startsWith "greater") {
-      if (functionNameLC endsWith "equal") _ >= _ else _ > _
-
-    } else {
-      if (functionNameLC startsWith "not") _ =!= _ else _ === _
+    functionName match {
+      case "eq" => _ === _
+      case "neq" => _ =!= _
+      case "gt" => _ > _
+      case "geq" => _ >= _
+      case "lt" => _ < _
+      case "leq" => _ <= _
     }
   }
 }

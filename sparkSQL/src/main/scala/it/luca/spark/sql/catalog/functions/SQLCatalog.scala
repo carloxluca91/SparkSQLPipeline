@@ -10,7 +10,7 @@ object SQLCatalog extends Enumeration {
   val Case: Val = Val("^(case)\\((.+\\))\\)\\.otherWise\\((\\w+\\(.*\\))\\)$".r)
   val Cast: Val = Val("^(cast)\\((\\w+\\(.*\\)), '(\\w+)'\\)$".r)
   val Col: Val = Val("^(col)\\('(\\w+)'\\)$".r)
-  val Compare: Val = Val("^(equal|notEqual|greater|greaterOrEqual|less|lessOrEqual)\\((\\w+\\(.*\\)), (\\w+\\(.*\\))\\)$".r)
+  val Compare: Val = Val("^(eq|neq|gt|geq|lt|leq)\\((\\w+\\(.*\\)), (\\w+\\(.*\\))\\)$".r)
   val Concat: Val = Val("^(concat)\\((.+\\))\\)$".r)
   val ConcatWs: Val = Val("^(concatWs)\\('(.+)', (.+)\\)$".r)
   val CurrentDateOrTimestamp: Val = Val("^(currentDate|currentTimestamp)\\(\\)$".r)
