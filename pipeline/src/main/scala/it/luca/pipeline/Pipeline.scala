@@ -15,7 +15,7 @@ import scala.util.{Failure, Success, Try}
 
 case class Pipeline(name: String, description: String, steps: List[AbstractStep]) {
 
-  private val logger = Logger.getLogger(classOf[Pipeline])
+  private val log = Logger.getLogger(classOf[Pipeline])
   private val dataframeMap: mutable.Map[String, DataFrame] = mutable.Map.empty[String, DataFrame]
 
   private def updateDataframeMap(dataFrameId:String, dataFrame: DataFrame): Unit = {
@@ -25,28 +25,30 @@ case class Pipeline(name: String, description: String, steps: List[AbstractStep]
 
       // If dataFrameId is already defined, notify overwriting operation
       val oldDfSchema: String = dataframeMap(dataFrameId).prettySchema
-      logger.warn(s"Dataframe id '$dataFrameId' is already defined. Schema: $oldDfSchema")
-      logger.warn(s"It will be overwritten by a Dataframe having schema $inputDfSchema")
+      log.warn(s"Dataframe id '$dataFrameId' is already defined. Schema: $oldDfSchema")
+      log.warn(s"It will be overwritten by a Dataframe having schema $inputDfSchema")
 
     } else {
-      logger.info(s"Defining new entry '$dataFrameId' having schema $inputDfSchema")
+      log.info(s"Defining new entry '$dataFrameId' having schema $inputDfSchema")
     }
 
     dataframeMap(dataFrameId) = dataFrame
-    logger.info(s"Successfully updated dataframeMap")
+    log.info(s"Successfully updated dataframeMap")
   }
 
-  def run(sparkSession: SparkSession): (Boolean, Seq[LogRecord]) = {
+  def run(sparkSession: SparkSession, toLogRecord: (String, AbstractStep, Option[Throwable]) => LogRecord): (Boolean, Seq[LogRecord]) = {
 
-    // If some steps are defined
     val logRecords: mutable.ListBuffer[LogRecord] = mutable.ListBuffer.empty[LogRecord]
     val numberOfSteps = steps.length
+
+    // For each step
     for ((abstractStep, stepIndex) <- steps.zip(1 to numberOfSteps)) {
 
-      // Try to execute them one by one according to matched pattern
       val stepName: String = abstractStep.name
       val stepProgression = s"$stepIndex/$numberOfSteps"
-      logger.info(s"Starting to execute step # $stepIndex ('$stepName')")
+
+      // Try to execute it according to its matched pattern
+      log.info(s"Starting to execute step # $stepIndex ('$stepName')")
       val tryToExecuteStep: Try[Unit] = Try {
         abstractStep match {
           case readStep: ReadStep =>
@@ -55,7 +57,7 @@ case class Pipeline(name: String, description: String, steps: List[AbstractStep]
 
           case transformStep: TransformStep =>
             val transformedDataframe: DataFrame = transformStep.transform(dataframeMap)
-            updateDataframeMap(transformStep.inputAlias, transformedDataframe)
+            updateDataframeMap(transformStep.outputAlias, transformedDataframe)
 
           case writeStep: WriteStep =>
             val dataframeToWrite: DataFrame = dataframeMap(writeStep.inputAlias)
@@ -67,15 +69,15 @@ case class Pipeline(name: String, description: String, steps: List[AbstractStep]
         case Failure(e) =>
 
           // If the step triggered an exception, create a new LogRecord reporting what happened and return the ones gathered so far
-          logger.error(s"Caught exception while trying to execute step # $stepIndex ('$stepName'). Stack trace: ", e)
-          logRecords.append(LogRecord(name, description, stepProgression, abstractStep, sparkSession.sparkContext, Some(e)))
+          log.error(s"Caught exception while trying to execute step # $stepIndex ('$stepName'). Stack trace: ", e)
+          logRecords.append(toLogRecord(stepProgression, abstractStep, Some(e)))
           return (false, logRecords)
 
         case Success(_) =>
 
           // Otherwise, just add this one and continue looping
-          logger.info(s"Successfully executed step # $stepIndex ('$stepName')")
-          logRecords.append(LogRecord(name, description, stepProgression, abstractStep, sparkSession.sparkContext, None))
+          log.info(s"Successfully executed step # $stepIndex ('$stepName')")
+          logRecords.append(toLogRecord(stepProgression, abstractStep, None))
       }
     }
 

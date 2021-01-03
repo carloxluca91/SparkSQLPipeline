@@ -8,14 +8,12 @@ object SparkSessionUtils {
   private val log = Logger.getLogger(getClass)
   private val logSparkSessionInfo: SparkSession => Unit = sparkSession => {
 
-    val details =
-      s"""
-         |
-         |     Successfully initialized ${classOf[SparkSession].getSimpleName}. Some details:
+    val details =s"""Successfully initialized ${classOf[SparkSession].getSimpleName}. Some details:
          |
          |     applicationName = '${sparkSession.sparkContext.appName}',
-         |     applicationId = '${sparkSession.sparkContext.applicationId}',
-         |     UI URL = '${sparkSession.sparkContext.uiWebUrl}'""".stripMargin
+         |     applicationId = ${sparkSession.sparkContext.applicationId},
+         |     UI URL = ${sparkSession.sparkContext.uiWebUrl.getOrElse("NOT AVAILABLE")}
+         |     """.stripMargin
 
       log.info(details)
     }

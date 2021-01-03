@@ -11,16 +11,15 @@ class CsvOptionsSpec extends AbstractJsonSpec {
   s"A ${className[CsvOptions]} object" should s"be able to parse a suitable .json string as a ${className[StructType]} object" in {
 
     // Initialize some column objects
-    val expectedFlag = false
-    val columnSpecificationMap: Map[String, (String, Boolean)] = Map(
-      "col1" -> (JsonValue.String, expectedFlag),
-      "col2" -> (JsonValue.Date, expectedFlag))
+    val columnSpecificationMap: Map[String, String] = Map(
+      "col1" -> JsonValue.String,
+      "col2" -> JsonValue.Date)
 
     // Initialize a schema defined by such column objects
     val csvColumnSpecifications: List[CsvColumnSpecification] = columnSpecificationMap
       .map(t => {
-        val (name, (dataType, nullable)) = t
-        CsvColumnSpecification(name, dataType, nullable)
+        val (name, dataType) = t
+        CsvColumnSpecification(name, dataType)
       }).toList
 
     val csvSchema = CsvOptions(csvColumnSpecifications, Some(";"), None)
@@ -36,7 +35,6 @@ class CsvOptionsSpec extends AbstractJsonSpec {
 
       assertResult(field.name)(specification.name)
       assertResult(field.dataType)(DataTypeUtils.dataType(specification.dataType))
-      assertResult(field.nullable)(specification.nullable)
     }
   }
 }

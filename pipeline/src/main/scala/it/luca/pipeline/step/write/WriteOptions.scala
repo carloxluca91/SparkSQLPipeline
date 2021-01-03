@@ -27,7 +27,7 @@ abstract class WriteFileOptions(override val destinationType: String, override v
 abstract class WriteTableOptions(override val destinationType: String, override val saveOptions: SaveOptions, val tableOptions: TableOptions)
   extends WriteOptions(destinationType, saveOptions)
 
-case class TableOptions(dbName: String, tableName: String, createDbIfNotExists: Option[String])
+case class TableOptions(dbName: String, tableName: String)
 
 object TableOptions {
 

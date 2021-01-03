@@ -7,24 +7,22 @@ import scala.util.{Failure, Success, Try}
 
 object Main extends App {
 
-  val logger = Logger.getLogger(getClass)
+  val log = Logger.getLogger(getClass)
 
-  logger.info("Starting main application")
+  log.info("Starting main application")
 
   ScoptParser.configParser.parse(args, ScoptParser.InputConfiguration()) match {
-    case None => logger.error("Error on parsing main arguments")
+    case None => log.error("Error on parsing main arguments")
     case Some(value) =>
 
-      logger.info(s"Successfully parsed main arguments $value")
+      log.info(s"Successfully parsed main arguments $value")
       Try {
 
         PipelineRunner(value).run()
 
       } match {
-        case Failure(exception) =>
-          logger.error(s"Caught error while trying to kick off pipeline '${value.pipelineName}'. Stack trace: ", exception)
-        case Success(_) =>
-          logger.info("Exiting main application")
+        case Failure(exception) => log.error(s"Caught error while trying to kick off pipeline '${value.pipelineName}'. Stack trace: ", exception)
+        case Success(_) => log.info("Exiting main application")
       }
   }
 }

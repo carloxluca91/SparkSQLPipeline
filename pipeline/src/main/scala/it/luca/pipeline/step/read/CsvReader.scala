@@ -13,11 +13,10 @@ object CsvReader extends Reader[ReadCsvOptions] {
 
     val csvPath: String = readOptions.path
     val (separator, header): (String, Boolean) = (readOptions.csvOptions.separator.getOrElse(","),
-      readOptions.csvOptions.header.getOrElse("false").toBoolean)
+      readOptions.csvOptions.header.getOrElse(false))
 
-    log.info(
-      s"""
-         |      Provided csv details:
+    log.info(s"""Provided csv details:
+         |
          |      path = $csvPath,
          |      separator = '$separator',
          |      header = $header

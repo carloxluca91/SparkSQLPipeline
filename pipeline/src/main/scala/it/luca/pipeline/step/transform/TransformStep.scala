@@ -10,7 +10,7 @@ import scala.collection.mutable
 
 case class TransformStep(override val name: String, override val description: String, override val stepType: String,
                          inputAlias: String, outputAlias: String, transformations: List[TransformationOptions])
-  extends AbstractStep(name, description, stepType, inputAlias) {
+  extends AbstractStep(name, description, stepType, outputAlias) {
 
   private val log = Logger.getLogger(getClass)
 

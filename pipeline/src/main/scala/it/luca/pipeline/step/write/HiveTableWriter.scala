@@ -17,7 +17,11 @@ object HiveTableWriter extends Writer[WriteHiveTableOptions] {
     val fullTableName = s"$dbName.$tableName"
 
     val sparkSession = SparkSessionUtils.getOrCreateWithHiveSupport
-    sparkSession.createDbIfNotExists(dbName, writeOptions.createTableOptions.dbPath)
+    val (dbPathOpt, tablePathOpt) = writeOptions.createTableOptions match {
+      case Some(x) => (x.dbPath, x.tablePath)
+      case None => (None, None)
+    }
+    sparkSession.createDbIfNotExists(dbName, dbPathOpt)
     if (sparkSession.catalog.tableExists(dbName, tableName)) {
 
       // If provided table exists, just .insertInto
@@ -28,7 +32,7 @@ object HiveTableWriter extends Writer[WriteHiveTableOptions] {
     } else {
 
       // Otherwise, .saveAsTable according to provided (or not) HDFS path
-      val (pathInfoStr, dataFrameWriterMaybeWithPath): (String, DataFrameWriter[Row]) = writeOptions.createTableOptions.tablePath match {
+      val (pathInfoStr, dataFrameWriterMaybeWithPath): (String, DataFrameWriter[Row]) = tablePathOpt match {
         case None => (s"default location of database '$dbName'", dataFrameWriter)
         case Some(value) => (s"provided path '$value'", dataFrameWriter.option("path", value))
       }
@@ -41,8 +45,8 @@ object HiveTableWriter extends Writer[WriteHiveTableOptions] {
   }
 }
 
-case class WriteHiveTableOptions(override val destinationType: String, override val saveOptions: SaveOptions, override val tableOptions: TableOptions,
-                                 createTableOptions: CreateTableOptions)
+case class WriteHiveTableOptions(override val destinationType: String, override val saveOptions: SaveOptions,
+                                 override val tableOptions: TableOptions, createTableOptions: Option[CreateTableOptions])
   extends WriteTableOptions(destinationType, saveOptions, tableOptions)
 
 object WriteHiveTableOptions {

@@ -2,7 +2,7 @@ package it.luca.pipeline.json
 
 import argonaut._, Argonaut._
 import it.luca.pipeline.exception.{JsonDecodingException, JsonSyntaxException, UnexistingPropertyException}
-import org.apache.commons.configuration.PropertiesConfiguration
+import org.apache.commons.configuration2.PropertiesConfiguration
 import org.apache.log4j.Logger
 
 import scala.reflect.runtime.universe._

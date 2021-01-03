@@ -3,9 +3,12 @@ package it.luca.pipeline
 import it.luca.pipeline.data.LogRecord
 import it.luca.pipeline.json.JsonUtils
 import it.luca.pipeline.option.ScoptParser.InputConfiguration
+import it.luca.pipeline.step.common.AbstractStep
 import it.luca.spark.sql.SparkSessionUtils
 import it.luca.spark.sql.extensions._
-import org.apache.commons.configuration.PropertiesConfiguration
+import org.apache.commons.configuration2.PropertiesConfiguration
+import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder
+import org.apache.commons.configuration2.builder.fluent.Parameters
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
@@ -22,10 +25,11 @@ case class PipelineRunner(private val inputConfiguration: InputConfiguration) {
     val dbName = jobProperties.getString("hive.db.pipelineRunner.name").toLowerCase
     val tableName = jobProperties.getString("hive.table.pipelineInfo.name").toLowerCase
 
-    // If everything is ok, run provided pipeline (or at least try to ;))
     val existsDb = sparkSession.catalog.databaseExists(dbName)
     val existsTable = if (existsDb) sparkSession.catalog.tableExists(dbName, tableName) else false
     val tableIsNotEmpty = if (existsTable) sparkSession.table(s"$dbName.$tableName").isEmpty else false
+
+    // If everything is ok, try to run provided pipeline
     if (existsDb & existsTable & tableIsNotEmpty) {
 
       log.info(s"Table '$dbName.$tableName' exists and it's not empty. Thus, looking for information on pipeline '$pipelineName' within it")
@@ -36,6 +40,7 @@ case class PipelineRunner(private val inputConfiguration: InputConfiguration) {
            |      WHERE TRIM(LOWER(pipeline_name)) = '${pipelineName.toLowerCase}'
            |      """.stripMargin
 
+      // Query table
       val pipelineInfoRows: Array[Row] = sparkSession.sql(sqlQuery).collect()
       if (pipelineInfoRows.isEmpty) {
 
@@ -43,14 +48,12 @@ case class PipelineRunner(private val inputConfiguration: InputConfiguration) {
         None
       } else {
 
-        val pipelineJsonFilePath: String = pipelineInfoRows(0).getAs(0)
-        log.info(s"Json file for pipeline '$pipelineName': '$pipelineJsonFilePath'")
-        Some(pipelineJsonFilePath)
+        Some(pipelineInfoRows(0).getAs(0))
       }
     } else {
 
-      // Run 'INITIAL_LOAD' pipeline, independently on provided pipelineName
-      val warningMsg: String = if (!existsDb) {
+      // Otherwise, run 'INITIAL_LOAD' pipeline, independently on provided pipelineName
+      val warningMsgPrefix: String = if (!existsDb) {
         s"Hive db '$dbName' does not exist"
       } else if (!existsTable) {
         s"Hive db '$dbName' exists but table '$tableName' does not"
@@ -58,8 +61,14 @@ case class PipelineRunner(private val inputConfiguration: InputConfiguration) {
         s"Both Hive db '$dbName' and table '$tableName' exists but this latter is empty"
       }
 
-      log.warn(warningMsg)
-      Some(jobProperties.getString("hdfs.initialLoad.file.path"))
+      val warningMsgSuffix = if (pipelineName.equalsIgnoreCase("initial_load")) {
+        ""
+      } else {
+        s"Thus, running pipeline 'INITIAL_LOAD' instead of provided one ('$pipelineName')"
+      }
+
+      log.warn(s"$warningMsgPrefix. $warningMsgSuffix")
+      Some(jobProperties.getString("hdfs.pipeline.initialLoad.file.path"))
     }
   }
 
@@ -105,30 +114,44 @@ case class PipelineRunner(private val inputConfiguration: InputConfiguration) {
         .insertInto(logTableFullName)
     }
 
-    log.info(s"Successfully inserted ${logRecords.size} ${classOf[LogRecord]}(s) within table '$logTableFullName'")
+    log.info(s"Successfully inserted ${logRecords.size} ${classOf[LogRecord].getSimpleName}(s) within table '$logTableFullName'")
   }
 
   def run(): Unit = {
 
-    val jobProperties = new PropertiesConfiguration(inputConfiguration.jobPropertiesFile)
-    log.info("Successfully loaded job .properties file")
+    // Initialize PropertiesConfiguration object holding Spark application properties
+    val builder = new FileBasedConfigurationBuilder(classOf[PropertiesConfiguration])
+    .configure(new Parameters().properties().setFileName(inputConfiguration.jobPropertiesFile))
+    val jobProperties: PropertiesConfiguration = builder.getConfiguration
+    log.info(s"Successfully loaded job '${inputConfiguration.jobPropertiesFile}' file")
 
     lazy val sparkSession: SparkSession = SparkSessionUtils.getOrCreateWithHiveSupport
+
+    // Retrieve HDFS path of json file representing provided pipeline
     val pipelineFilePathOpt: Option[String] = getPipelineFilePathOpt(sparkSession, jobProperties)
     if (pipelineFilePathOpt.nonEmpty) {
 
-      // Try to parse provided json file as a Pipeline and run it
+      // Turn HDFS .json file into a json string
       val pipelineFilePath = pipelineFilePathOpt.get
       log.info(s"Content of pipeline '$pipelineName' available at HDFS path '$pipelineFilePath'")
       val hadoopFs = FileSystem.get(sparkSession.sparkContext.hadoopConfiguration)
       val jsonString: String = Source
         .fromInputStream(hadoopFs.open(new Path(pipelineFilePath)))
-        .getLines()
-        .mkString("\n")
+        .getLines().mkString(" ")
 
-      hadoopFs.close()
-      val pipeline: Pipeline = JsonUtils.decodeAndInterpolateJsonString[Pipeline](jsonString, jobProperties)
-      val (pipelineFullyExecuted, logRecords) : (Boolean, Seq[LogRecord]) = pipeline.run(sparkSession)
+      // Decode the json string as a Pipeline object and run the pipeline
+      val decodedPipeline: Pipeline = JsonUtils.decodeAndInterpolateJsonString[Pipeline](jsonString, jobProperties)
+      val logRecordPartialApply: (String, AbstractStep, Option[Throwable]) => LogRecord = LogRecord(decodedPipeline.name,
+        decodedPipeline.description,
+        _: String,
+        _: AbstractStep,
+        sparkSession.sparkContext,
+        _: Option[Throwable],
+        jobProperties.getString("yarn.application.history.ui.url"))
+
+      val (pipelineFullyExecuted, logRecords) : (Boolean, Seq[LogRecord]) = decodedPipeline.run(sparkSession, logRecordPartialApply)
+
+      // Insert LogRecords returned by pipeline (for logging purposes)
       insertLogRecords(logRecords, sparkSession, jobProperties)
       if (pipelineFullyExecuted) {
         log.info(s"Successfully executed whole pipeline '$pipelineName'")

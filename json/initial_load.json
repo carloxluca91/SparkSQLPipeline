@@ -1,0 +1,69 @@
+{
+  "name": "INITIAL_LOAD",
+  "description": "Initial load pipeline",
+  "steps": [
+    {
+      "name": "ReadCsv",
+      "description": "Read 'pipeline_info.csv' as DataFrame",
+      "stepType": "read",
+      "outputAlias": "pipelineInfoCsv",
+      "readOptions": {
+        "sourceType": "csv",
+        "path": "${hdfs.pipeline.initialLoad.csv.path}",
+        "csvOptions": {
+          "schema": [
+            {"name": "pipeline_name", "dataType": "string"},
+            {"name": "pipeline_description", "dataType": "string"},
+            {"name": "pipeline_file_name", "dataType": "string"}],
+          "separator": ";"
+        }
+      }
+    },
+    {
+      "name": "TransformInputCsv",
+      "description": "Alter column 'pipeline_description, add insert time info",
+      "stepType": "transform",
+      "inputAlias": "pipelineInfoCsv",
+      "outputAlias": "pipelineInfoCsvTransformed",
+      "transformations": [
+        {
+          "transformationType": "withColumn",
+          "transformationOrder": 1,
+          "columns": [
+            {"expression": "concatWs('/', lit('${hdfs.application.pipeline.dir.path}'), col('pipeline_file_name'))", "alias": "pipeline_file_path"},
+            {"expression": "currentTimestamp()", "alias": "ts_insert"},
+            {"expression": "dateFormat(currentDate(), 'yyyy-MM-dd')", "alias": "dt_insert"}
+          ]
+        },
+        {
+          "transformationType": "select",
+          "transformationOrder": 2,
+          "columns": [
+            "col('pipeline_name')",
+            "col('pipeline_description')",
+            "col('pipeline_file_path')",
+            "col('ts_insert')",
+            "col('dt_insert')"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "WriteTransformedCsv",
+      "description": "Write ",
+      "stepType": "write",
+      "inputAlias": "pipelineInfoCsvTransformed",
+      "writeOptions": {
+        "destinationType": "hive",
+        "saveOptions": {
+          "saveMode": "${spark.saveMode.overwrite}",
+          "coalesce": 1
+        },
+        "tableOptions": {
+          "dbName": "${hive.db.pipelineRunner.name}",
+          "tableName": "${hive.table.pipelineInfo.name}"
+        }
+      }
+    }
+  ]
+}

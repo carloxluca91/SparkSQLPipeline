@@ -1,15 +1,16 @@
 package it.luca.pipeline.data
 
-import java.sql.{Date, Timestamp}
-import java.time.Instant
-
 import it.luca.pipeline.step.common.AbstractStep
 import org.apache.spark.SparkContext
+
+import java.sql.{Date, Timestamp}
+import java.time.Instant
+import java.time.format.DateTimeFormatter
 
 case class LogRecord(applicationId: String,
                      applicationName: String,
                      applicationStartTime: Timestamp,
-                     applicationStartDate: Date,
+                     applicationStartDate: String,
                      pipelineName: String,
                      pipelineDescription: String,
                      stepProgression: String,
@@ -18,48 +19,39 @@ case class LogRecord(applicationId: String,
                      stepDescription: String,
                      dataframeId: String,
                      stepFinishTime: Timestamp,
-                     stepFinishDate: Date,
+                     stepFinishDate: String,
                      stepFinishCode: Int,
                      stepFinishStatus: String,
-                     exceptionMessage: Option[String])
+                     exceptionMessage: Option[String],
+                     yarnUIUrl: String)
 
 object LogRecord {
 
   def apply(pipelineName: String,
             pipelineDescription: String,
-            stepIndex: String,
+            stepProgression: String,
             abstractStep: AbstractStep,
             sparkContext: SparkContext,
-            exceptionOpt: Option[Throwable]): LogRecord = {
-
-    val exceptionMsgOpt: Option[String] = exceptionOpt match {
-      case None => None
-      case Some(e) =>
-
-        val stackTraceStr: String = e.getStackTrace
-          .take(10)
-          .map(_.toString)
-          .mkString("\n")
-
-        val exceptionMsg: String = s"${e.toString}. Stack trace: $stackTraceStr"
-        Some(exceptionMsg)
-    }
+            exceptionOpt: Option[Throwable],
+            yarnUIUrl: String): LogRecord = {
 
     LogRecord(applicationId = sparkContext.applicationId,
       applicationName = sparkContext.appName,
       applicationStartTime = Timestamp.from(Instant.ofEpochMilli(sparkContext.startTime)),
-      applicationStartDate = new Date(sparkContext.startTime),
+      applicationStartDate = new Date(sparkContext.startTime).toLocalDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
       pipelineName = pipelineName,
       pipelineDescription = pipelineDescription,
-      stepProgression = stepIndex,
+      stepProgression = stepProgression,
       stepName = abstractStep.name,
       stepType = abstractStep.stepType,
       stepDescription = abstractStep.description,
       dataframeId = abstractStep.alias,
       stepFinishTime = new Timestamp(System.currentTimeMillis()),
-      stepFinishDate = new Date(System.currentTimeMillis()),
+      stepFinishDate = new Date(System.currentTimeMillis()).toLocalDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
       stepFinishCode = if (exceptionOpt.isEmpty) 0 else -1,
       stepFinishStatus = if (exceptionOpt.isEmpty) "OK" else "KO",
-      exceptionMessage = exceptionMsgOpt)
+      exceptionMessage = exceptionOpt.map(_.toString),
+      yarnUIUrl = s"$yarnUIUrl/app/${sparkContext.applicationId}"
+    )
   }
 }

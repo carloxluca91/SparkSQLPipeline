@@ -3,7 +3,7 @@ package it.luca.pipeline.json
 import argonaut._
 import it.luca.pipeline.exception._
 import it.luca.pipeline.test.AbstractJsonSpec
-import org.apache.commons.configuration.PropertiesConfiguration
+import org.apache.commons.configuration2.PropertiesConfiguration
 import org.apache.log4j.Logger
 
 import scala.util.Try
