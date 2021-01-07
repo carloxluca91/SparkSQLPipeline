@@ -1,6 +1,7 @@
 package it.luca.pipeline.step.read
 
 import argonaut.DecodeJson
+import it.luca.pipeline.exception.ReadHiveTableOptionsException
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -10,26 +11,28 @@ object HiveTableReader extends Reader[ReadHiveTableOptions] {
 
   override def read(readOptions: ReadHiveTableOptions, sparkSession: SparkSession): DataFrame = {
 
-    val (dbName, tableName): (String, String) = (readOptions.dbName, readOptions.tableName)
-    readOptions.query match {
+    readOptions.sqlQuery match {
       case None =>
 
-        log.info(s"No query provided. Reading whole Hive table '$dbName.$tableName'")
-        sparkSession.table(s"$dbName.$tableName")
+        readOptions.tableName match {
+          case None => throw ReadHiveTableOptionsException()
+          case Some(value) =>
+            log.info(s"No SQL query provided. Thus, reading whole Hive table '$value'")
+            sparkSession.table(value)
+        }
 
       case Some(value) =>
 
-        log.info(s"Attempting to execute query: $value")
+        log.info(s"Detected following SQL query :$value. Trying to execute it")
         val dataFrame = sparkSession.sql(value)
-        log.info(s"Successfully executed query: $value")
+        log.info(s"Successfully executed provided SQL query: $value")
         dataFrame
     }
   }
 }
 
-case class ReadHiveTableOptions(override val sourceType: String, override val dbName: String, override val tableName: String,
-                                override val query: Option[String])
-  extends ReadTableOptions(sourceType, dbName, tableName, query)
+case class ReadHiveTableOptions(override val sourceType: String, override val tableName: Option[String], override val sqlQuery: Option[String])
+  extends ReadTableOptions(sourceType, tableName, sqlQuery)
 
 object ReadHiveTableOptions {
 

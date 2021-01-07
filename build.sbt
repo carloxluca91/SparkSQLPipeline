@@ -40,7 +40,7 @@ lazy val commonSettings = Seq(
 )
 
 // aggregate project for running tasks on both subprojects (except assembly)
-lazy val root = (project in file("."))
+lazy val sparkSQLPipeline = (project in file("."))
   .aggregate(sparkSQL, pipeline)
 
 lazy val sparkSQL = (project in file("sparkSQL"))

@@ -22,5 +22,5 @@ object ReadOptions extends DecodeJsonSubTypes[ReadOptions] {
 
 abstract class ReadFileOptions(override val sourceType: String, val path: String) extends ReadOptions(sourceType)
 
-abstract class ReadTableOptions(override val sourceType: String, val dbName: String, val tableName: String, val query: Option[String])
+abstract class ReadTableOptions(override val sourceType: String, val tableName: Option[String], val sqlQuery: Option[String])
   extends ReadOptions(sourceType)

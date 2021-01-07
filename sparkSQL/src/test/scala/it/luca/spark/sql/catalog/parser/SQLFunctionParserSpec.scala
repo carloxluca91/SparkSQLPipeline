@@ -15,7 +15,8 @@ class SQLFunctionParserSpec extends AbstractSpec with BeforeAndAfterAll {
 
   private def assertEqualColumns(expectedColumn: Column, actualColumn: Column): Unit = {
 
-    assert(expectedColumn.expr.sql == actualColumn.expr.sql)
+    assert(expectedColumn.equals(actualColumn) |
+      expectedColumn.expr.sql == expectedColumn.expr.sql)
   }
 
   s"A ${SQLFunctionParser.getClass.getSimpleName} object" should
