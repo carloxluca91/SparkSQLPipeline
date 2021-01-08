@@ -1,8 +1,9 @@
 package it.luca.pipeline.json
 
-import argonaut._, Argonaut._
+import argonaut.Argonaut._
+import argonaut._
 import it.luca.pipeline.exception.{JsonDecodingException, JsonSyntaxException, UnexistingPropertyException}
-import org.apache.commons.configuration2.PropertiesConfiguration
+import it.luca.pipeline.utils.JobProperties
 import org.apache.log4j.Logger
 
 import scala.reflect.runtime.universe._
@@ -35,7 +36,7 @@ object JsonUtils {
     }
   }
 
-  def decodeAndInterpolateJsonString[T](jsonString: String, jobProperties: PropertiesConfiguration)
+  def decodeAndInterpolateJsonString[T](jsonString: String, jobProperties: JobProperties)
                                            (implicit decodeJson: DecodeJson[T], typeTag: TypeTag[T]): T = {
 
     val getPropertyValue: String => String =

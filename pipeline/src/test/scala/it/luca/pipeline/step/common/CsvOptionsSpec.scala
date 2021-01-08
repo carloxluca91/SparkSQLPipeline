@@ -3,7 +3,7 @@ package it.luca.pipeline.step.common
 import argonaut.EncodeJson
 import it.luca.pipeline.json.{JsonUtils, JsonValue}
 import it.luca.pipeline.test.AbstractJsonSpec
-import it.luca.spark.sql.types.DataTypeUtils
+import it.luca.spark.sql.utils.DataTypeUtils
 import org.apache.spark.sql.types.StructType
 
 class CsvOptionsSpec extends AbstractJsonSpec {
@@ -28,7 +28,7 @@ class CsvOptionsSpec extends AbstractJsonSpec {
 
     val jsonString: String = toJsonString(csvSchema)
     val decodedCsvOptions = JsonUtils.decodeJsonString[CsvOptions](jsonString)
-    val structType: StructType = decodedCsvOptions.schemaAsStructType
+    val structType: StructType = decodedCsvOptions.structType
     structType
       .fields
       .zip(decodedCsvOptions.schema) foreach { case (field, specification) =>

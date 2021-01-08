@@ -3,7 +3,7 @@ package it.luca.pipeline.json
 import argonaut._
 import it.luca.pipeline.exception._
 import it.luca.pipeline.test.AbstractJsonSpec
-import org.apache.commons.configuration2.PropertiesConfiguration
+import it.luca.pipeline.utils.JobProperties
 
 import scala.util.Try
 
@@ -86,7 +86,7 @@ class JsonUtilsSpec extends AbstractJsonSpec {
     assert(second.isInstanceOf[ClassB])
   }
 
- it should s"correctly interpolate a .json string against a ${className[PropertiesConfiguration]} object if all keys are defined" in {
+ it should s"correctly interpolate a .json string against a ${className[JobProperties]} object if all keys are defined" in {
 
     (firstTestProperty :: secondTestProperty :: Nil) foreach {k => assert(jobProperties.containsKey(k))}
     val expectedUrl = jobProperties.getString(firstTestProperty)

@@ -2,6 +2,7 @@ package it.luca.pipeline.test
 
 import argonaut.Argonaut._
 import argonaut._
+import it.luca.pipeline.utils.JobProperties
 import org.apache.log4j.Logger
 
 import scala.reflect.runtime.universe._
@@ -9,6 +10,8 @@ import scala.reflect.runtime.universe._
 trait AbstractJsonSpec extends AbstractSpec {
 
   private val log = Logger.getLogger(getClass)
+
+  final val jobProperties: JobProperties = JobProperties("spark_application.properties")
 
   final def toJsonString[T](tObject: T)(implicit encodeJson: EncodeJson[T], typeTag: TypeTag[T]): String = {
 

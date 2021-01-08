@@ -6,15 +6,15 @@ import it.luca.spark.sql.extensions._
 import org.apache.log4j.Logger
 import org.apache.spark.sql.DataFrame
 
-case class WriteStep(override val name: String, override val description: String, override val stepType: String, inputAlias: String,
-                     writeOptions: WriteOptions)
+case class WriteStep(override val name: String, override val description: String, override val stepType: String,
+                     inputAlias: String, writeOptions: WriteOptions)
   extends AbstractStep(name, description, stepType, inputAlias) {
 
   private val log = Logger.getLogger(getClass)
 
   def write(dataFrame: DataFrame): Unit = {
 
-    log.info(s"DataFrame to be written ('$inputAlias') has schema: ${dataFrame.prettySchema}")
+    log.info(s"Starting to write dataFrame '$inputAlias'. Schema: ${dataFrame.prettySchema}")
     writeOptions match {
       case _: WriteFileOptions =>
       case table: WriteTableOptions => table match {

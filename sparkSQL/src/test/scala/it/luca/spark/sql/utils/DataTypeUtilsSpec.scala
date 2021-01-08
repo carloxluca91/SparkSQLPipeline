@@ -1,4 +1,4 @@
-package it.luca.spark.sql.types
+package it.luca.spark.sql.utils
 
 import it.luca.spark.sql.test.AbstractSpec
 import org.apache.spark.sql.types.{DataType, DataTypes}

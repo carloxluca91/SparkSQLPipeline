@@ -26,7 +26,7 @@ object CsvReader extends Reader[ReadCsvOptions] {
       .format("csv")
       .option("sep", separator)
       .option("header", header)
-      .schema(readOptions.csvOptions.schemaAsStructType)
+      .schema(readOptions.csvOptions.structType)
       .load(csvPath)
   }
 }
