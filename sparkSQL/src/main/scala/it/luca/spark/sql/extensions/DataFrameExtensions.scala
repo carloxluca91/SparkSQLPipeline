@@ -31,22 +31,17 @@ class DataFrameExtensions(private val dataFrame: DataFrame) {
 
       // If provided table exists, just .insertInto (and let Hive handle partitioning)
       log.info(s"Hive table '$fqTableName' already exists. So, starting to insert data within it (using .insertInto) using saveMode '$saveMode'")
-
-      dataFrameWriter
-        .insertInto(fqTableName)
-
+      dataFrameWriter.insertInto(fqTableName)
       log.info(s"Successfully inserted data within Hive table '$fqTableName'")
 
     } else {
 
       // Otherwise, .saveAsTable according to provided (or not) partitioning column(s) and HDFS path
       log.warn(s"Hive table '$fqTableName' does not exist. So, creating it now (using .saveAsTable) using saveMode '$saveMode'")
-
       dataFrameWriter
         .partitionBy(partitionByOpt)
         .path(tablePathOpt)
         .saveAsTable(fqTableName)
-
       log.info(s"Successfully created Hive table '$fqTableName'")
     }
   }

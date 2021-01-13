@@ -23,7 +23,7 @@ object HiveTableReader extends Reader[ReadHiveTableOptions] {
 
       case Some(value) =>
 
-        log.info(s"Detected following SQL query :$value. Trying to execute it")
+        log.info(s"Detected following SQL query: $value. Trying to execute it")
         val dataFrame = sparkSession.sql(value)
         log.info(s"Successfully executed provided SQL query: $value")
         dataFrame
