@@ -1,6 +1,7 @@
 package it.luca.pipeline
 
 import it.luca.pipeline.data.LogRecord
+import it.luca.pipeline.exception.DuplicatePipelineException
 import it.luca.pipeline.json.JsonUtils
 import it.luca.pipeline.option.ScoptParser.InputConfiguration
 import it.luca.pipeline.step.common.AbstractStep
@@ -33,18 +34,22 @@ case class PipelineRunner(private val inputConfiguration: InputConfiguration) {
       log.info(s"Table '$dbName.$tableName' exists and it's not empty. Thus, looking for information on pipeline '$pipelineName' within it")
       val sqlQuery = s"""
            |
-           |      SELECT file_name
+           |      SELECT pipeline_file_path
            |      FROM $dbName.$tableName
-           |      WHERE TRIM(LOWER(pipeline_name)) = '${pipelineName.toLowerCase}'
+           |      WHERE pipeline_name = '$pipelineName'
            |      """.stripMargin
 
-      // Query table
       val pipelineInfoRows: Array[Row] = sparkSession.sql(sqlQuery).collect()
       if (pipelineInfoRows.isEmpty) {
-
         log.warn(s"Unable to retrieve any info about pipeline '$pipelineName' with such query $sqlQuery. Thus, nothing will be triggered :(")
         None
-      } else Some(pipelineInfoRows(0).getAs(0))
+      } else {
+        if (pipelineInfoRows.length > 1) {
+          throw DuplicatePipelineException(pipelineName, pipelineInfoRows)
+        } else {
+          Some(pipelineInfoRows(0).getAs(0))
+        }
+      }
     } else {
 
       // Otherwise, run 'INITIAL_LOAD' pipeline, independently on provided pipelineName
