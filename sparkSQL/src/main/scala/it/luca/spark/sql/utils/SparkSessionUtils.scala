@@ -22,10 +22,9 @@ object SparkSessionUtils {
   def getOrCreate(): SparkSession = {
 
     log.info(s"Trying to initialize a standard ${classOf[SparkSession].getSimpleName} (i.e. without Hive support)")
-
-    val sparkSession = SparkSession.builder
+    val sparkSession = SparkSession
+      .builder
       .getOrCreate
-
     logSparkSessionInfo(sparkSession)
     sparkSession
   }
@@ -33,13 +32,11 @@ object SparkSessionUtils {
   def getOrCreateWithHiveSupport: SparkSession = {
 
     log.info(s"Trying to initialize a ${classOf[SparkSession].getSimpleName} with Hive support")
-
     val sparkSession = SparkSession.builder
       .enableHiveSupport
       .config("hive.exec.dynamic.partition", "true")
       .config("hive.exec.dynamic.partition.mode", "nonstrict")
       .getOrCreate
-
     logSparkSessionInfo(sparkSession)
     sparkSession
   }

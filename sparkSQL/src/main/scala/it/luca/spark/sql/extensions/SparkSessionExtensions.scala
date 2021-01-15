@@ -12,14 +12,13 @@ class SparkSessionExtensions(private val sparkSession: SparkSession) {
     // If given db does not exist, create it
     if (!sparkSession.catalog.databaseExists(dbName.toLowerCase)) {
 
-      val (dbLocationInfo, dbHDFSLocation): (String, String) = dbHDFSPath match {
-        case None => ("default location", "")
-        case Some(value) => (s"custom location '$value'", s"LOCATION '$value'")
-      }
+      val createDbCommonStatement = s"CREATE DATABASE IF NOT EXISTS $dbName"
+      val (dbLocationInfo, createDbFinalStatement): (String, String) = dbHDFSPath
+        .map(s => (s"custom HDFS location '$s'", s"$createDbCommonStatement LOCATION '$s'"))
+        .getOrElse("default location", createDbCommonStatement)
 
-      val createDbStatement = s"CREATE DATABASE IF NOT EXISTS $dbName $dbHDFSLocation"
-      log.warn(s"Hive db '$dbName' does not exist yet. Creating it now at $dbLocationInfo with following statement: $createDbStatement")
-      sparkSession.sql(createDbStatement)
+      log.warn(s"Hive db '$dbName' does not exist yet. Creating it now at $dbLocationInfo with following statement: $createDbFinalStatement")
+      sparkSession.sql(createDbFinalStatement)
       log.info(s"Successfully created Hive db '$dbName' at $dbLocationInfo")
 
     } else {

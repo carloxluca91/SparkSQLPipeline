@@ -17,10 +17,10 @@ object CsvReader extends Reader[ReadCsvOptions] {
 
     log.info(s"""Provided csv details:
          |
-         |      path = $csvPath,
-         |      separator = '$separator',
-         |      header = $header
-         |      """.stripMargin)
+         |    path = $csvPath,
+         |    separator = '$separator',
+         |    header = $header
+         |    """.stripMargin)
 
     sparkSession.read
       .format("csv")

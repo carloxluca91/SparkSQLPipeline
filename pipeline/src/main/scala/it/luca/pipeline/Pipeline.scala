@@ -68,7 +68,7 @@ case class Pipeline(name: String, description: String, steps: List[AbstractStep]
       tryToExecuteStep match {
         case Failure(e) =>
 
-          // If the step triggered an exception, create a new LogRecord reporting what happened and return the ones gathered so far
+          // If the step triggered an exception, create a new LogRecord reporting what happened and return (false, LogRecords gathered so far)
           log.error(s"Caught exception while trying to execute step # $stepIndex ('$stepName'). Stack trace: ", e)
           logRecords.append(toLogRecord(stepProgression, abstractStep, Some(e)))
           return (false, logRecords)
