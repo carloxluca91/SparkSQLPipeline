@@ -15,8 +15,7 @@ class SQLFunctionParserSpec extends AbstractSpec with BeforeAndAfterAll {
 
   private def assertEqualColumns(expectedColumn: Column, actualColumn: Column): Unit = {
 
-    assert(expectedColumn.equals(actualColumn) |
-      expectedColumn.expr.sql == expectedColumn.expr.sql)
+    assert(expectedColumn.expr.semanticEquals(actualColumn.expr))
   }
 
   s"A ${SQLFunctionParser.getClass.getSimpleName} object" should
@@ -24,15 +23,6 @@ class SQLFunctionParserSpec extends AbstractSpec with BeforeAndAfterAll {
 
     val s = "ilBudello(col('c1'))"
     assertThrows[UndefinedSQLFunctionException](SQLFunctionParser.parse(s))
-  }
-
-  // Alias
-  it should s"correctly parse ${className[Alias]} SQL function" in {
-
-    val expectedAlias = "aliasName"
-    val expected = firstCol.alias(expectedAlias)
-    val actual = SQLFunctionParser.parse(s"alias($firstColStr, '$expectedAlias')")
-    assertEqualColumns(expected, actual)
   }
 
   // Case
