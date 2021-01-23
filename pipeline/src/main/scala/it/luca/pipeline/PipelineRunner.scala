@@ -81,7 +81,6 @@ case class PipelineRunner(private val inputConfiguration: InputConfiguration) {
     val regex: scala.util.matching.Regex = "([A-Z])".r
     val logRecordDfWithSQLColumnNames: DataFrame = logRecordDf.columns
       .foldLeft(logRecordDf)((df, columnName) => {
-
         val newColumnName: String = regex.replaceAllIn(columnName, m => s"_${m.group(1).toLowerCase}")
         df.withColumnRenamed(columnName, newColumnName)
       })

@@ -1,7 +1,7 @@
 package it.luca.pipeline.step.transform
 
 import argonaut.DecodeJson
-import it.luca.spark.sql.catalog.parser.SQLFunctionParser
+import it.luca.spark.sql.catalog.parser.SqlFunctionParser
 import org.apache.spark.sql.{Column, DataFrame}
 
 object Select extends SingleDfTransformation[SelectOptions] {
@@ -9,7 +9,7 @@ object Select extends SingleDfTransformation[SelectOptions] {
   override def transform(transformationOptions: SelectOptions, dataFrame: DataFrame): DataFrame = {
 
     val selectColumns: Seq[Column] = parseSQLColumns[String, Column](transformationOptions.columns,
-      SQLFunctionParser.parse, identity, "column to select")
+      SqlFunctionParser.parse, identity, "column to select")
     dataFrame.select(selectColumns: _*)
   }
 }

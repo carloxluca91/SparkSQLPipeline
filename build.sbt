@@ -40,10 +40,10 @@ lazy val commonSettings = Seq(
 )
 
 // aggregate project for running tasks on both subprojects (except assembly)
-lazy val sparkSQLPipeline = (project in file("."))
-  .aggregate(sparkSQL, pipeline)
+lazy val sparkSqlPipeline = (project in file("."))
+  .aggregate(sparkSql, pipeline)
 
-lazy val sparkSQL = (project in file("sparkSQL"))
+lazy val sparkSql = (project in file("sparkSql"))
   .settings(commonSettings: _*)
 
 lazy val pipeline = (project in file("pipeline"))
@@ -58,5 +58,5 @@ lazy val pipeline = (project in file("pipeline"))
     ),
 
     // Jar name
-    assemblyJarName in assembly := s"sparkSQLPipeline_${version.value}.jar",
-  ).dependsOn(sparkSQL)
+    assemblyJarName in assembly := s"sparkSqlPipeline_${version.value}.jar",
+  ).dependsOn(sparkSql)

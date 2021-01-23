@@ -1,7 +1,7 @@
 package it.luca.pipeline.step.transform
 
 import argonaut.DecodeJson
-import it.luca.spark.sql.catalog.parser.SQLFunctionParser
+import it.luca.spark.sql.catalog.parser.SqlFunctionParser
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{Column, DataFrame}
 
@@ -19,8 +19,8 @@ object Join extends TwoDfTransformation[JoinTransformationOptions] {
 
           // Parse both sides of equality condition and combine them according to provided operator
           val (singleJoinCondition, index): (SingleJoinCondition, Int) = tuple2
-          val leftSide: Column = SQLFunctionParser.parse(singleJoinCondition.leftSide, leftDf)
-          val rightSide: Column = SQLFunctionParser.parse(singleJoinCondition.rightSide, rightDf)
+          val leftSide: Column = SqlFunctionParser.parse(singleJoinCondition.leftSide, leftDf)
+          val rightSide: Column = SqlFunctionParser.parse(singleJoinCondition.rightSide, rightDf)
 
           log.info(s"Successfully parsed ${classOf[SingleJoinCondition].getSimpleName} # $index: ${singleJoinCondition.toString}")
           leftSide && rightSide
@@ -47,7 +47,7 @@ object Join extends TwoDfTransformation[JoinTransformationOptions] {
             case "right" => ("right", rightDataFrame)
           }
 
-          val selectedColumn: Column = SQLFunctionParser.parse(joinSelectColumn.expression, currentSideDf)
+          val selectedColumn: Column = SqlFunctionParser.parse(joinSelectColumn.expression, currentSideDf)
           val selectedColumnMaybeAliased: Column = joinSelectColumn.alias match {
             case None => selectedColumn
             case Some(x) => selectedColumn.as(x)

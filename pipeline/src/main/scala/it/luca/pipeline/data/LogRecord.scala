@@ -3,9 +3,9 @@ package it.luca.pipeline.data
 import it.luca.pipeline.step.common.AbstractStep
 import org.apache.spark.SparkContext
 
-import java.sql.{Date, Timestamp}
-import java.time.Instant
+import java.sql.Timestamp
 import java.time.format.DateTimeFormatter
+import java.time.{Instant, LocalDate}
 
 case class LogRecord(applicationId: String,
                      applicationName: String,
@@ -38,8 +38,8 @@ object LogRecord {
 
     LogRecord(applicationId = sparkContext.applicationId,
       applicationName = sparkContext.appName,
-      applicationStartTime = Timestamp.from(Instant.ofEpochMilli(sparkContext.startTime)),
-      applicationStartDate = new Date(sparkContext.startTime).toLocalDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
+      applicationStartTime = new Timestamp(sparkContext.startTime),
+      applicationStartDate = LocalDate.from(Instant.ofEpochMilli(sparkContext.startTime)).format(DateTimeFormatter.ISO_LOCAL_DATE),
       applicationUser = sparkContext.sparkUser,
       pipelineName = pipelineName,
       pipelineDescription = pipelineDescription,
@@ -49,7 +49,7 @@ object LogRecord {
       stepDescription = abstractStep.description,
       dataframeId = abstractStep.alias,
       stepFinishTime = new Timestamp(System.currentTimeMillis()),
-      stepFinishDate = new Date(System.currentTimeMillis()).toLocalDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
+      stepFinishDate = LocalDate.from(Instant.ofEpochMilli(System.currentTimeMillis())).format(DateTimeFormatter.ISO_LOCAL_DATE),
       stepFinishCode = if (exceptionOpt.isEmpty) 0 else -1,
       stepFinishStatus = if (exceptionOpt.isEmpty) "OK" else "KO",
       exceptionMessage = exceptionOpt.map(_.toString),

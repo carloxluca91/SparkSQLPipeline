@@ -1,7 +1,7 @@
 package it.luca.pipeline.step.transform
 
 import argonaut.DecodeJson
-import it.luca.spark.sql.catalog.parser.SQLFunctionParser
+import it.luca.spark.sql.catalog.parser.SqlFunctionParser
 import org.apache.log4j.Logger
 import org.apache.spark.sql.{Column, DataFrame}
 
@@ -12,7 +12,7 @@ object WithColumn extends SingleDfTransformation[WithColumnOptions] {
   override def transform(transformationOptions: WithColumnOptions, dataFrame: DataFrame): DataFrame = {
 
     val columnsToAdd: Seq[(String, Column)] = parseSQLColumns[ColumnOption, (String, Column)](transformationOptions.columns,
-      c => (c.alias, SQLFunctionParser.parse(c.expression)),
+      c => (c.alias, SqlFunctionParser.parse(c.expression)),
       c => s"${c.expression}.as(${c.alias})",
       "column to add")
 
