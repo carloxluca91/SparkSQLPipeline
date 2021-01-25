@@ -1,9 +1,9 @@
 package it.luca.pipeline.utils
 
-import org.apache.commons.configuration2.PropertiesConfiguration
-import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder
-import org.apache.commons.configuration2.builder.fluent.Parameters
+import org.apache.commons.configuration.PropertiesConfiguration
 import org.apache.log4j.Logger
+
+import java.io.InputStream
 
 case class JobProperties(private val propertiesConfiguration: PropertiesConfiguration) {
 
@@ -18,11 +18,15 @@ object JobProperties {
 
   def apply(propertiesFileName: String): JobProperties = {
 
-    // Initialize PropertiesConfiguration object holding Spark application properties
-    val builder = new FileBasedConfigurationBuilder(classOf[PropertiesConfiguration])
-      .configure(new Parameters().properties().setFileName(propertiesFileName))
-    val jobProperties = JobProperties(builder.getConfiguration)
+    val jobProperties = JobProperties(new PropertiesConfiguration(propertiesFileName))
     log.info(s"Successfully loaded .properties file '$propertiesFileName'")
     jobProperties
+  }
+
+  def apply(inputStream: InputStream): JobProperties = {
+
+    val propertiesConfiguration = new PropertiesConfiguration()
+    propertiesConfiguration.load(inputStream)
+    JobProperties(propertiesConfiguration)
   }
 }

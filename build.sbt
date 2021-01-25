@@ -1,5 +1,5 @@
 // Dependencies versions
-val hadoopCommonVersion = "3.0.0"
+val commonsConfigurationVersion = "1.6"
 val sparkVersion = "2.4.0"
 val argonautVersion = "6.2.2"
 val scoptVersion = "3.5.0"
@@ -18,10 +18,10 @@ lazy val commonSettings = Seq(
     "-target:jvm-1.8"
   ),
 
+  onChangedBuildSource in Scope.Global := ReloadOnSourceChanges,
   libraryDependencies ++= Seq(
-    "org.apache.hadoop" % "hadoop-common" % hadoopCommonVersion % "provided",
-    "org.apache.spark" %% "spark-core" % sparkVersion % "provided",
-    "org.apache.spark" %% "spark-sql" % sparkVersion % "provided",
+    "org.apache.spark" %% "spark-core" % sparkVersion % "provided" exclude("commons-configuration", "commons-configuration"),
+    "org.apache.spark" %% "spark-sql" % sparkVersion % "provided" exclude("commons-configuration", "commons-configuration"),
     "org.scalactic" %% "scalactic" % scalaTestVersion,
     "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
     ),
@@ -33,30 +33,25 @@ lazy val commonSettings = Seq(
   // Merging strategy
   assemblyMergeStrategy in assembly := {
     case PathList("META-INF", _*) => MergeStrategy.discard
-    case x =>
-      val oldStrategy = (assemblyMergeStrategy in assembly).value
-      oldStrategy(x)
+    case _ => MergeStrategy.first
   }
 )
 
-// aggregate project for running tasks on both subprojects (except assembly)
+// Aggregate projects in order to run tasks on both of them
 lazy val sparkSqlPipeline = (project in file("."))
-  .aggregate(sparkSql, pipeline)
-
-lazy val sparkSql = (project in file("sparkSql"))
-  .settings(commonSettings: _*)
-
-lazy val pipeline = (project in file("pipeline"))
-  .settings(commonSettings: _*)
   .settings(
+    commonSettings,
     libraryDependencies ++= Seq(
+      "commons-configuration" % "commons-configuration" % commonsConfigurationVersion,
       "com.github.scopt" %% "scopt" % scoptVersion,
       "io.argonaut" %% "argonaut" % argonautVersion,
       "io.argonaut" %% "argonaut-scalaz" % argonautVersion,
       "io.argonaut" %% "argonaut-monocle" % argonautVersion,
-      "io.argonaut" %% "argonaut-cats" % argonautVersion
-    ),
+      "io.argonaut" %% "argonaut-cats" % argonautVersion),
 
-    // Jar name
-    assemblyJarName in assembly := s"sparkSqlPipeline_${version.value}.jar",
-  ).dependsOn(sparkSql)
+    assemblyJarName in assembly := s"${name.value}_${version.value}.jar")
+  .aggregate(sparkSql)
+  .dependsOn(sparkSql)
+
+lazy val sparkSql = (project in file("sparkSql"))
+  .settings(commonSettings)
