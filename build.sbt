@@ -1,9 +1,11 @@
 // Dependencies versions
-val commonsConfigurationVersion = "1.6"
-val sparkVersion = "2.4.0"
+val sparkVersion = "2.4.0-cdh6.3.2"
 val argonautVersion = "6.2.2"
 val scoptVersion = "3.5.0"
 val scalaTestVersion = "3.2.0"
+
+// Resolvers Url
+val clouderaRepoUrl = "https://repository.cloudera.com/artifactory/cloudera-repos/"
 
 // Common settings
 lazy val commonSettings = Seq(
@@ -18,22 +20,21 @@ lazy val commonSettings = Seq(
     "-target:jvm-1.8"
   ),
 
-  onChangedBuildSource in Scope.Global := ReloadOnSourceChanges,
+  // Add Cloudera repo url in order to resolve Spark dependencies
+  resolvers += "Cloudera Repo" at clouderaRepoUrl,
   libraryDependencies ++= Seq(
-    "org.apache.spark" %% "spark-core" % sparkVersion % "provided" exclude("commons-configuration", "commons-configuration"),
-    "org.apache.spark" %% "spark-sql" % sparkVersion % "provided" exclude("commons-configuration", "commons-configuration"),
+    "org.apache.spark" %% "spark-core" % sparkVersion % "provided",
+    "org.apache.spark" %% "spark-sql" % sparkVersion % "provided",
     "org.scalactic" %% "scalactic" % scalaTestVersion,
-    "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
-    ),
+    "org.scalatest" %% "scalatest" % scalaTestVersion % "test"),
 
   // Exclude .properties file from packaging
-  (unmanagedResources in Compile) := (unmanagedResources in Compile).value
-    .filterNot(_.getName.endsWith(".properties")),
-
-  // Merging strategy
+  (unmanagedResources in Compile) := (unmanagedResources in Compile).value.filterNot(_.getName.endsWith(".properties")),
   assemblyMergeStrategy in assembly := {
     case PathList("META-INF", _*) => MergeStrategy.discard
-    case _ => MergeStrategy.first
+    case x =>
+      val oldStrategy = (assemblyMergeStrategy in assembly).value
+      oldStrategy(x)
   }
 )
 
@@ -42,7 +43,6 @@ lazy val sparkSqlPipeline = (project in file("."))
   .settings(
     commonSettings,
     libraryDependencies ++= Seq(
-      "commons-configuration" % "commons-configuration" % commonsConfigurationVersion,
       "com.github.scopt" %% "scopt" % scoptVersion,
       "io.argonaut" %% "argonaut" % argonautVersion,
       "io.argonaut" %% "argonaut-scalaz" % argonautVersion,

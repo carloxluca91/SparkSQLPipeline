@@ -10,8 +10,7 @@ import scala.reflect.runtime.universe._
 trait AbstractJsonSpec extends AbstractSpec {
 
   private val log = Logger.getLogger(getClass)
-  protected final val jobProperties: JobProperties = JobProperties(classOf[AbstractJsonSpec]
-    .getClassLoader.getResourceAsStream("spark_application.properties"))
+  protected final val jobProperties: JobProperties = JobProperties("spark_application.properties")
 
   final def toJsonString[T](tObject: T)(implicit encodeJson: EncodeJson[T], typeTag: TypeTag[T]): String = {
 

@@ -8,9 +8,7 @@ import scala.util.{Failure, Success, Try}
 object Main extends App {
 
   val log = Logger.getLogger(getClass)
-
   log.info("Starting main application")
-
   ScoptParser.configParser.parse(args, ScoptParser.InputConfiguration()) match {
     case None => log.error("Error on parsing main arguments")
     case Some(value) =>
